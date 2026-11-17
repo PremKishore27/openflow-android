@@ -1,6 +1,9 @@
 package com.openflow.android
 
+import android.Manifest
 import android.accessibilityservice.AccessibilityService
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Rect
@@ -17,15 +20,16 @@ import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 
 /**
- * OpenFlow as a floating overlay (Wispr Flow style) instead of a keyboard.
+ * OpenFlow as a floating overlay, in the style of Wispr Flow.
  *
- * A small dark pill floats above whatever keyboard is open whenever a text field is focused.
- * Hold the pill to talk, or tap it to go hands-free (then tap the check mark). The cleaned text is
- * written straight into the focused field, so your normal keyboard stays in place.
+ * Everything lives in ONE small window that floats above the keyboard whenever a text field is focused:
+ *   [ ✎ ]  [ 🎙 Hold to talk | waveform ]  [ ↶ | ✓ ]
+ * with a status bubble above it. Left and right slots keep their size in every state, so nothing jumps.
  */
 class OpenFlowService : AccessibilityService(), Dictation.Callback {
     private enum class State { IDLE, LISTENING, WORKING }
@@ -37,11 +41,10 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
 
     private lateinit var root: LinearLayout
     private lateinit var bubble: TextView
+    private lateinit var left: TextView    // ✎ edit (idle) / ✕ cancel (listening)
+    private lateinit var right: TextView   // ↶ undo (idle) / ✓ done (listening)
+    private lateinit var hint: TextView
     private lateinit var wave: WaveformView
-    private lateinit var cancel: TextView
-    private lateinit var done: TextView
-    private lateinit var editChip: TextView
-    private lateinit var undoChip: TextView
     private lateinit var params: WindowManager.LayoutParams
     private var shown = false
 
@@ -53,13 +56,13 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
     private var pendingSelection = ""
     private var target: AccessibilityNodeInfo? = null
     private var pkg = ""
-    private var lastStart = -1
-    private var lastInserted: String? = null
+    private var undoStart = -1
+    private var undoText: String? = null
 
     private val hideRunnable = Runnable { if (state == State.IDLE) hide() }
     private val refreshRunnable = Runnable { refresh() }
     private val clearBubble = Runnable { setBubble("") }
-    private val hideUndo = Runnable { undoChip.visibility = View.GONE }
+    private val expireUndo = Runnable { undoText = null; applyState() }
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
@@ -74,7 +77,7 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
 
     override fun onInterrupt() { abort() }
 
-    override fun onUnbind(intent: android.content.Intent?): Boolean {
+    override fun onUnbind(intent: Intent?): Boolean {
         abort()
         hide()
         return super.onUnbind(intent)
@@ -93,20 +96,23 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
         main.postDelayed(refreshRunnable, 80)
     }
 
-    // ---------- overlay UI ----------
+    // ---------- overlay UI (one window) ----------
+    private val WIDTH = 296
+
     private fun capsule(color: Int, radius: Int) = GradientDrawable().apply {
         setColor(color)
         cornerRadius = dp(radius).toFloat()
         setStroke(dp(1), 0x33FFFFFF)
     }
 
-    private fun circle(label: String, bg: Int) = TextView(this).apply {
+    private fun chip(label: String, onTap: () -> Unit): TextView = TextView(this).apply {
         text = label
-        textSize = 15f
+        textSize = 17f
         setTextColor(Color.WHITE)
         gravity = Gravity.CENTER
-        background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(bg); setStroke(dp(1), 0x33FFFFFF) }
-        layoutParams = LinearLayout.LayoutParams(dp(34), dp(34)).apply { setMargins(dp(3), 0, dp(3), 0) }
+        background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(0xFF2C2C2E.toInt()) }
+        layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
+        setOnClickListener { onTap() }
     }
 
     private fun buildOverlay() {
@@ -117,50 +123,42 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
         bubble = TextView(this).apply {
             setTextColor(Color.WHITE)
             textSize = 13f
-            maxLines = 3
+            maxLines = 2
+            gravity = Gravity.CENTER
             setPadding(dp(14), dp(8), dp(14), dp(8))
-            background = capsule(0xEE111111.toInt(), 16)
+            background = capsule(0xF21C1C1E.toInt(), 14)
             visibility = View.GONE
-            maxWidth = dp(280)
         }
-        root.addView(bubble, LinearLayout.LayoutParams(-2, -2).apply { bottomMargin = dp(8) })
+        root.addView(bubble, LinearLayout.LayoutParams(dp(WIDTH), LinearLayout.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(8) })
 
-        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-        editChip = circle("✎", 0xFF111111.toInt()).apply {
-            visibility = View.GONE
-            setOnClickListener { begin("edit", latch = true) }
+        left = chip("✎") { onLeft() }
+        right = chip("↶") { onRight() }
+        hint = TextView(this).apply {
+            text = "🎙  Hold to talk"
+            textSize = 15f
+            setTextColor(Color.WHITE)
+            gravity = Gravity.CENTER
         }
-        undoChip = circle("↶", 0xFF111111.toInt()).apply {
-            visibility = View.GONE
-            setOnClickListener { undo() }
+        wave = WaveformView(this).apply { visibility = View.GONE }
+        val center = FrameLayout(this).apply {
+            addView(hint, FrameLayout.LayoutParams(-1, -1))
+            addView(wave, FrameLayout.LayoutParams(-1, dp(28), Gravity.CENTER))
         }
-        cancel = circle("✕", 0xFF3A3A3C.toInt()).apply {
-            visibility = View.GONE
-            setOnClickListener { abort(); setBubble("") }
-        }
-        done = circle("✓", 0xFF30D158.toInt()).apply {
-            visibility = View.GONE
-            setOnClickListener { finish() }
-        }
-        wave = WaveformView(this)
+        bindTalk(center)
+
         val pill = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            background = capsule(0xFF111111.toInt(), 22)
-            setPadding(dp(5), dp(5), dp(5), dp(5))
+            background = capsule(0xF2151517.toInt(), 26)
+            setPadding(dp(6), dp(6), dp(6), dp(6))
         }
-        pill.addView(cancel)
-        pill.addView(wave, LinearLayout.LayoutParams(dp(44), dp(24)).apply { setMargins(dp(8), 0, dp(8), 0) })
-        pill.addView(done)
-        bindTalk(wave)
-
-        row.addView(editChip)
-        row.addView(pill, LinearLayout.LayoutParams(-2, -2).apply { setMargins(dp(4), 0, dp(4), 0) })
-        row.addView(undoChip)
-        root.addView(row)
+        pill.addView(left)
+        pill.addView(center, LinearLayout.LayoutParams(0, dp(40), 1f))
+        pill.addView(right)
+        root.addView(pill, LinearLayout.LayoutParams(dp(WIDTH), dp(52)))
 
         params = WindowManager.LayoutParams(
-            -2, -2,
+            dp(WIDTH), WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
@@ -170,6 +168,7 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
             gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
             y = dp(96)
         }
+        applyState()
     }
 
     private fun show() {
@@ -187,6 +186,10 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
             try { wm.removeView(root) } catch (_: Exception) {}
             shown = false
         }
+    }
+
+    private fun relayout() {
+        if (shown) try { wm.updateViewLayout(root, params) } catch (_: Exception) {}
     }
 
     /** Distance from the screen bottom so the pill sits just above the keyboard. */
@@ -207,20 +210,21 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
         bubble.text = text
         bubble.visibility = if (text.isEmpty()) View.GONE else View.VISIBLE
         if (autoClearMs > 0) main.postDelayed(clearBubble, autoClearMs)
-        if (shown) try { wm.updateViewLayout(root, params) } catch (_: Exception) {}
+        relayout()
     }
 
+    /** Sets the look of every slot for the current state. Slots keep their size, only alpha and text change. */
     private fun applyState() {
-        val listening = state == State.LISTENING
-        val w = if (listening) dp(120) else dp(44)
-        (wave.layoutParams as LinearLayout.LayoutParams).width = w
-        wave.requestLayout()
-        cancel.visibility = if (listening && latched) View.VISIBLE else View.GONE
-        done.visibility = if (listening && latched) View.VISIBLE else View.GONE
         val idle = state == State.IDLE
-        editChip.visibility = if (idle && hasSelection()) View.VISIBLE else View.GONE
-        if (!idle) undoChip.visibility = View.GONE
-        if (shown) try { wm.updateViewLayout(root, params) } catch (_: Exception) {}
+        val listening = state == State.LISTENING
+        left.text = if (listening) "✕" else "✎"
+        left.alpha = if (idle && !hasSelection()) 0.35f else if (state == State.WORKING) 0.35f else 1f
+        right.text = if (listening) "✓" else "↶"
+        right.alpha = if (listening || (idle && undoText != null)) 1f else 0.35f
+        hint.visibility = if (listening) View.GONE else View.VISIBLE
+        hint.text = if (state == State.WORKING) "Working…" else "🎙  Hold to talk"
+        wave.visibility = if (listening) View.VISIBLE else View.GONE
+        relayout()
     }
 
     // ---------- focus tracking ----------
@@ -254,6 +258,24 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
     }
 
     // ---------- gestures ----------
+    private fun onLeft() {
+        when (state) {
+            State.LISTENING -> abort()
+            State.IDLE -> if (hasSelection()) begin("edit", latch = true)
+                else setBubble("Select some text, then tap ✎", 2000)
+            State.WORKING -> {}
+        }
+    }
+
+    private fun onRight() {
+        when (state) {
+            State.LISTENING -> finish()
+            State.IDLE -> undo()
+            State.WORKING -> {}
+        }
+    }
+
+    /** Hold the centre to talk; a quick tap switches to hands-free until ✓ or ✕. */
     private fun bindTalk(v: View) {
         v.setOnTouchListener { _, e ->
             when (e.action) {
@@ -272,8 +294,8 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
                         val held = SystemClock.uptimeMillis() - downAt
                         if (held < 250 && e.action == MotionEvent.ACTION_UP) {
                             latched = true
-                            applyState()
                             setBubble("Hands-free: tap ✓ when done")
+                            applyState()
                         } else finish()
                     }
                 }
@@ -284,9 +306,9 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
 
     // ---------- recording ----------
     private fun begin(m: String, latch: Boolean) {
-        if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             setBubble("Microphone not allowed. Opening OpenFlow…", 3000)
-            startActivity(android.content.Intent(this, SettingsActivity::class.java).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+            startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             return
         }
         val node = findEditable() ?: target
@@ -299,8 +321,8 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
         state = State.LISTENING
         latched = latch
         wave.clear()
-        applyState()
         setBubble(if (latch) "Listening… tap ✓ when done" else "Listening…")
+        applyState()
         dictation.start()
     }
 
@@ -309,21 +331,20 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
         state = State.WORKING
         latched = false
         wave.clear()
-        applyState()
         setBubble("Working…")
+        applyState()
         dictation.stop()
     }
 
     private fun abort() {
         if (::dictation.isInitialized) dictation.cancel()
-        state = State.IDLE
-        latched = false
-        if (::wave.isInitialized) { wave.clear(); applyState() }
+        if (::wave.isInitialized) idle()
     }
 
     private fun idle(message: String = "", clearMs: Long = 0) {
         state = State.IDLE
         latched = false
+        wave.clear()
         applyState()
         setBubble(message, clearMs)
     }
@@ -388,9 +409,10 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
         Thread {
             val result = Llm.edit(selection, instruction, prefs)
             main.post {
-                if (result == null) idle("AI request failed", 3000)
-                else {
-                    if (!replaceSelection(result)) idle("Couldn't write to the field", 3000) else idle()
+                when {
+                    result == null -> idle("AI request failed", 3000)
+                    !replaceSelection(result) -> idle("Couldn't write to the field", 3000)
+                    else -> idle()
                 }
             }
         }.start()
@@ -413,35 +435,36 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
 
     private fun insert(text: String) {
         val node = findEditable() ?: target
-        val start = node?.let { selection(it).first } ?: -1
+        if (node == null) { idle("Couldn't write to the field", 3000); return }
+        val start = selection(node).first
         if (!replaceSelection(text)) { idle("Couldn't write to the field", 3000); return }
-        lastStart = start
-        lastInserted = text
+        undoStart = start
+        undoText = text
+        main.removeCallbacks(expireUndo)
+        main.postDelayed(expireUndo, 8000)
         idle()
-        undoChip.visibility = View.VISIBLE
-        main.removeCallbacks(hideUndo)
-        main.postDelayed(hideUndo, 8000)
-        if (shown) try { wm.updateViewLayout(root, params) } catch (_: Exception) {}
     }
 
     /** Removes the last dictation if it is still exactly where we put it. */
     private fun undo() {
-        val node = findEditable() ?: target
-        val s = lastInserted
-        if (node == null || s == null || lastStart < 0) return
+        val s = undoText ?: return
+        val node = findEditable() ?: target ?: return
         val cur = fieldText(node)
-        if (cur.startsWith(s, lastStart)) {
-            val out = cur.removeRange(lastStart, lastStart + s.length)
+        if (undoStart >= 0 && cur.startsWith(s, undoStart)) {
+            val out = cur.removeRange(undoStart, undoStart + s.length)
             node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply {
                 putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, out)
             })
             node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, Bundle().apply {
-                putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, lastStart)
-                putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, lastStart)
+                putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, undoStart)
+                putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, undoStart)
             })
             setBubble("Removed last dictation", 1500)
+        } else {
+            setBubble("Can't undo: you've typed since", 1500)
         }
-        lastInserted = null
-        undoChip.visibility = View.GONE
+        undoText = null
+        main.removeCallbacks(expireUndo)
+        applyState()
     }
 }

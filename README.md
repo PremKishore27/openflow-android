@@ -38,6 +38,7 @@ The app walks you through these four steps in order. The full guide with trouble
 |---|---|
 | Dictate | Tap the OpenFlow icon above your keyboard, speak, tap ✓ |
 | Cancel | Tap ✕ |
+| Move the icon | Drag it anywhere on screen. It remembers the spot, separately for when the keyboard is open and closed |
 | Undo the last dictation | Tap "↶ Tap to undo" within 6 seconds |
 | Rewrite selected text by voice | Select text, tap the icon, say "make this more formal" (needs your API key) |
 

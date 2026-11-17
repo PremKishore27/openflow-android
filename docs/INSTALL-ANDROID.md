@@ -83,6 +83,8 @@ Notes:
 | To do this | Do this |
 |---|---|
 | Cancel without typing anything | Tap **✕** |
+| Move the icon | Drag it anywhere. It stays where you leave it (one spot with the keyboard open, one with it closed) |
+| Put the icon back by the keyboard | OpenFlow app → Behaviour → **Reset icon position** |
 | Undo what was just typed | Tap **↶ Tap to undo** above the icon (shown for 6 seconds) |
 | Rewrite selected text | Select text, tap the icon, say "make this more formal" (needs an API key) |
 

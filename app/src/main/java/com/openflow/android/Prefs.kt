@@ -58,6 +58,23 @@ class Prefs(ctx: Context) {
         ) ?: ""
         set(v) { sp.edit().putString("appStyles", v).apply() }
 
+    /** Where you left the floating icon, as fractions of the screen (centre x, bottom y). One per keyboard state. */
+    fun overlayPos(keyboardOpen: Boolean): Pair<Float, Float>? {
+        val k = if (keyboardOpen) "ime" else "free"
+        val x = sp.getFloat("ovx_$k", -1f)
+        val y = sp.getFloat("ovy_$k", -1f)
+        return if (x in 0f..1f && y in 0f..1f) x to y else null
+    }
+
+    fun saveOverlayPos(keyboardOpen: Boolean, fx: Float, fy: Float) {
+        val k = if (keyboardOpen) "ime" else "free"
+        sp.edit().putFloat("ovx_$k", fx.coerceIn(0f, 1f)).putFloat("ovy_$k", fy.coerceIn(0f, 1f)).apply()
+    }
+
+    fun resetOverlayPos() {
+        sp.edit().remove("ovx_ime").remove("ovy_ime").remove("ovx_free").remove("ovy_free").apply()
+    }
+
     fun dictionary() = parseMap(dictionaryText)
     fun snippets() = parseMap(snippetsText)
     fun appStyles() = parseMap(appStylesText)

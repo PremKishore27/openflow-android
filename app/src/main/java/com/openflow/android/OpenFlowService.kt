@@ -13,6 +13,8 @@ import android.os.Handler
 import android.os.Looper
 import android.util.DisplayMetrics
 import android.view.Gravity
+import android.view.MotionEvent
+import android.view.ViewConfiguration
 import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
@@ -47,6 +49,9 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
     private lateinit var wave: WaveformView
     private lateinit var params: WindowManager.LayoutParams
     private var shown = false
+    private var dragging = false
+    private var anchorCx = 0f     // where the icon's centre is, in screen pixels
+    private var anchorBy = 0f     // where the bottom of the icon is, in screen pixels
 
     private var state = State.IDLE
     private var mode = "dictate"
@@ -134,7 +139,7 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
     private fun buildOverlay() {
         root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            gravity = Gravity.END
+            gravity = Gravity.CENTER_HORIZONTAL
         }
         bubble = TextView(this).apply {
             setTextColor(Color.WHITE)
@@ -158,7 +163,8 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
             addView(logo, FrameLayout.LayoutParams(-1, -1))
             addView(wave, FrameLayout.LayoutParams(-1, dp(26), Gravity.CENTER))
             layoutParams = LinearLayout.LayoutParams(dp(ICON), dp(ICON))
-            setOnClickListener { onTapIcon() }
+            setOnClickListener { onTapIcon() }   // also what TalkBack triggers
+            attachDragAndTap(this)
         }
 
         pill = LinearLayout(this).apply {
@@ -178,16 +184,20 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
-            gravity = Gravity.BOTTOM or Gravity.END
+            gravity = Gravity.BOTTOM or Gravity.START   // x = distance from the left, y = distance from the bottom
             x = dp(12)
             y = dp(96)
+        }
+        // When the icon grows into the bar (or the bubble appears), keep the icon where it was.
+        root.addOnLayoutChangeListener { _, l, _, r, _, ol, _, or2, _ ->
+            if (!dragging && shown && (r - l) != (or2 - ol)) { placeWindow(anchorCx, anchorBy); relayout() }
         }
         applyState()
     }
 
     private fun show() {
         main.removeCallbacks(hideRunnable)
-        params.y = bottomOffset()
+        if (!dragging) applyPosition()
         if (!shown) {
             try { wm.addView(root, params); shown = true } catch (_: Exception) {}
         } else {
@@ -206,17 +216,89 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
         if (shown) try { wm.updateViewLayout(root, params) } catch (_: Exception) {}
     }
 
-    /** Distance from the screen bottom so the icon sits just above the keyboard. */
-    private fun bottomOffset(): Int {
+    // ---------- position: draggable, remembered ----------
+    private fun realMetrics(): DisplayMetrics {
         val dm = DisplayMetrics()
         @Suppress("DEPRECATION")
         wm.defaultDisplay.getRealMetrics(dm)
+        return dm
+    }
+
+    /** Top edge of the keyboard on screen, or null when no keyboard is showing. */
+    private fun imeTop(): Int? {
+        val ime = windows.firstOrNull { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD } ?: return null
         val r = Rect()
-        val ime = windows.firstOrNull { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD }
-        return if (ime != null) {
-            ime.getBoundsInScreen(r)
-            (dm.heightPixels - r.top + dp(8)).coerceAtLeast(dp(24))
-        } else dp(96)
+        ime.getBoundsInScreen(r)
+        return r.top
+    }
+
+    /** Where the icon should be: where you left it, or by default on the right just above the keyboard. */
+    private fun applyPosition() {
+        val dm = realMetrics()
+        val top = imeTop()
+        val saved = prefs.overlayPos(top != null)
+        val cx: Float
+        val by: Float
+        if (saved != null) {
+            cx = saved.first * dm.widthPixels
+            by = saved.second * dm.heightPixels
+        } else {
+            cx = dm.widthPixels - dp(12) - dp(ICON) / 2f
+            by = if (top != null) (top - dp(8)).toFloat() else (dm.heightPixels - dp(96)).toFloat()
+        }
+        placeWindow(cx, by)
+    }
+
+    /** Puts the window so the icon's centre is at [cx] and its bottom at [by], kept fully on screen. */
+    private fun placeWindow(cx: Float, by: Float) {
+        val dm = realMetrics()
+        val w = if (root.width > 0) root.width else dp(ICON)
+        val h = if (root.height > 0) root.height else dp(ICON)
+        params.x = (cx - w / 2f).toInt().coerceIn(0, maxOf(0, dm.widthPixels - w))
+        params.y = (dm.heightPixels - by).toInt().coerceIn(0, maxOf(0, dm.heightPixels - h))
+        anchorCx = params.x + w / 2f
+        anchorBy = (dm.heightPixels - params.y).toFloat()
+    }
+
+    /** One finger: a tap starts or finishes dictation; dragging moves the icon anywhere on screen. */
+    private fun attachDragAndTap(v: View) {
+        val slop = ViewConfiguration.get(this).scaledTouchSlop
+        var downX = 0f
+        var downY = 0f
+        var startCx = 0f
+        var startBy = 0f
+        v.setOnTouchListener { view, e ->
+            when (e.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    downX = e.rawX; downY = e.rawY
+                    startCx = anchorCx; startBy = anchorBy
+                    dragging = false
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = e.rawX - downX
+                    val dy = e.rawY - downY
+                    if (!dragging && (dx * dx + dy * dy) > slop * slop) {
+                        dragging = true
+                        view.parent?.requestDisallowInterceptTouchEvent(true)
+                    }
+                    if (dragging) {
+                        placeWindow(startCx + dx, startBy + dy)
+                        relayout()
+                    }
+                }
+                MotionEvent.ACTION_UP -> {
+                    if (dragging) {
+                        dragging = false
+                        val dm = realMetrics()
+                        prefs.saveOverlayPos(imeTop() != null, anchorCx / dm.widthPixels, anchorBy / dm.heightPixels)
+                    } else {
+                        view.performClick()   // runs onTapIcon()
+                    }
+                }
+                MotionEvent.ACTION_CANCEL -> dragging = false
+            }
+            true
+        }
     }
 
     private fun setBubble(text: String, autoClearMs: Long = 0) {

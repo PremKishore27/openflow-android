@@ -235,6 +235,11 @@ class SettingsActivity : Activity() {
         val (spokenRow, sw) = switchRow("Spoken punctuation", "Say “comma”, “full stop” or “new line”", prefs.spoken)
         spoken = sw
         behaviour.addView(spokenRow)
+        divider(behaviour)
+        behaviour.addView(row("Reset icon position", "Drag the icon anywhere. This puts it back by the keyboard.", null) {
+            prefs.resetOverlayPos()
+            Toast.makeText(this, "Icon position reset", Toast.LENGTH_SHORT).show()
+        })
         col.addView(behaviour)
 
         col.addView(section("Speech recognition"))

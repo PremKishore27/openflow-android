@@ -8,7 +8,7 @@ About 5 minutes. You need an Android phone running Android 8.0 or newer.
 
 ## 1. Download the app
 
-1. Open the link above in **Chrome** on your phone.
+1. Open the link above in **Chrome** on your phone. While this repository is private, sign in to GitHub in Chrome first with the account that owns it.
 2. Tap **Download anyway** if Chrome warns about the file. It's the app you're installing, built from this public source code.
 3. When it finishes, tap **Open** in the download bar, or find `OpenFlow-Android.apk` in your **Downloads** folder.
 

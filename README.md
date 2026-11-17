@@ -55,13 +55,14 @@ overlay and writes text into the focused field. It ignores password fields.
 - **Context:** reads the text before the cursor, so a continuation starts in lower case with the right spacing.
 - **Your dictionary and snippets:** always spell "open flow" as "OpenFlow"; say "my email" to insert your address.
 - **Tone per app:** casual in chat apps, formal in mail apps. You choose the mapping.
-- **Optional AI polish:** send the dictation to Claude for grammar and flow, using your own Anthropic key.
+- **On-device Whisper (English):** a free, offline speech model that runs on your phone for much better accuracy than the built-in recognizer.
+- **Optional AI polish:** send the dictation to Claude for grammar and flow, using your own Anthropic key. This needs a key; without one, the polish switches do nothing.
 
 ## Privacy
 
 - Password fields are never read or written.
-- Speech recognition uses Android's built-in recognizer. On recent phones it runs on-device when available.
-- The only network call is the optional Claude request, and only if you add a key and turn it on.
+- With the Whisper model downloaded, your audio never leaves the phone. Without it, OpenFlow can use the phone's built-in recognizer, which may send audio to Google (you can turn that off in Settings).
+- Network calls: the one-time model download from Hugging Face, and the optional Claude request if you add a key and turn it on.
 - Your API key and settings are stored in the app's private storage on your phone.
 
 ## How it works
@@ -69,13 +70,14 @@ overlay and writes text into the focused field. It ignores password fields.
 | File | What it does |
 |---|---|
 | `OpenFlowService.kt` | Accessibility service: draws the overlay, handles gestures, writes text into the focused field |
-| `Dictation.kt` | Wraps Android's speech recognizer and keeps listening through pauses |
+| `Dictation.kt` | Wraps Android's built-in speech recognizer (the fallback engine) |
+| `LocalDictation.kt`, `LocalWhisper.kt`, `Models.kt` | On-device Whisper: records audio, downloads and verifies the model, transcribes with sherpa-onnx |
 | `Cleanup.kt`, `ContextFit.kt` | Rule-based text cleanup and capitalisation/spacing from context |
 | `Llm.kt` | Optional Claude polish and edit-by-voice; falls back to the rule-based text on any failure |
 | `Prefs.kt`, `SettingsActivity.kt` | Settings and the setup screen |
 | `WaveformView.kt` | Live level bars while you speak |
 
-The app uses no third-party libraries. Everything runs on the Android SDK.
+The only third-party library is [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) (Apache-2.0), which runs Whisper on the phone. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Build from source
 
@@ -85,7 +87,7 @@ The app uses no third-party libraries. Everything runs on the Android SDK.
 
 Pushes to `main` build the APK in GitHub Actions. Version tags (`v*`) also publish it as a release.
 
-Needs JDK 17 and the Android SDK (platform 35).
+Needs JDK 17, the Android SDK (platform 35), and `bash` with `curl`. The first build downloads the pinned sherpa-onnx library automatically (`scripts/fetch-sherpa-onnx.sh`).
 
 ```bash
 ./gradlew test          # unit tests
@@ -94,7 +96,7 @@ Needs JDK 17 and the Android SDK (platform 35).
 
 ## Limits
 
-- Dictation quality depends on the phone's speech recognizer. Swapping in on-device Whisper is the next big step.
+- Whisper needs a 64-bit phone and a one-time download (160–375 MB). It transcribes after you tap ✓, so there is no live text. English only for now.
 - Some apps with custom text views (canvas editors, some games) ignore text inserted by accessibility tools.
 - Debug builds only for now. There is no Play Store release.
 

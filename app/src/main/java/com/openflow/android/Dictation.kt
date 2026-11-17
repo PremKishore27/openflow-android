@@ -16,7 +16,7 @@ import android.speech.SpeechRecognizer
  * SpeechRecognizer stops by itself after a pause, so while the user is still holding / latched we
  * restart it and join the pieces. All callbacks arrive on the main thread.
  */
-class Dictation(private val ctx: Context, private val cb: Callback) {
+class Dictation(private val ctx: Context, private val cb: Callback) : SpeechEngine {
     interface Callback {
         fun onLevel(level: Float)
         fun onPartial(text: String)
@@ -31,7 +31,7 @@ class Dictation(private val ctx: Context, private val cb: Callback) {
     private var finishing = false   // the user let go; waiting for the last result
     private val deliverRunnable = Runnable { deliver() }
 
-    fun start() {
+    override fun start() {
         if (!SpeechRecognizer.isRecognitionAvailable(ctx)) {
             cb.onError("No speech recognition service on this phone")
             return
@@ -40,7 +40,9 @@ class Dictation(private val ctx: Context, private val cb: Callback) {
         segments.clear()
         active = true
         finishing = false
-        rec = if (Build.VERSION.SDK_INT >= 33 && SpeechRecognizer.isOnDeviceRecognitionAvailable(ctx)) {
+        // Online recognition (Google) is more accurate than the offline one, so it is the default.
+        val offline = !Prefs(ctx).onlineSpeech
+        rec = if (offline && Build.VERSION.SDK_INT >= 33 && SpeechRecognizer.isOnDeviceRecognitionAvailable(ctx)) {
             SpeechRecognizer.createOnDeviceSpeechRecognizer(ctx)
         } else {
             SpeechRecognizer.createSpeechRecognizer(ctx)
@@ -50,7 +52,7 @@ class Dictation(private val ctx: Context, private val cb: Callback) {
     }
 
     /** The user let go: finish and deliver what we have. */
-    fun stop() {
+    override fun stop() {
         if (!active) return
         active = false
         finishing = true
@@ -58,7 +60,7 @@ class Dictation(private val ctx: Context, private val cb: Callback) {
         main.postDelayed(deliverRunnable, 2500) // safety net if no final result arrives
     }
 
-    fun cancel() {
+    override fun cancel() {
         active = false
         finishing = false
         main.removeCallbacks(deliverRunnable)
@@ -69,7 +71,7 @@ class Dictation(private val ctx: Context, private val cb: Callback) {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-            .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+            .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, !Prefs(ctx).onlineSpeech)
             .putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, ctx.packageName)
         rec?.startListening(intent)
     }

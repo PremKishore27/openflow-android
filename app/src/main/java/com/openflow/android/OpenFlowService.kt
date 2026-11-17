@@ -33,7 +33,7 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
     private enum class State { IDLE, LISTENING, WORKING }
 
     private lateinit var prefs: Prefs
-    private lateinit var dictation: Dictation
+    private var engine: SpeechEngine? = null
     private lateinit var wm: WindowManager
     private val main = Handler(Looper.getMainLooper())
 
@@ -69,9 +69,9 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
     override fun onServiceConnected() {
         super.onServiceConnected()
         prefs = Prefs(this)
-        dictation = Dictation(this, this)
         wm = getSystemService(WINDOW_SERVICE) as WindowManager
         buildOverlay()
+        preloadWhisper()
     }
 
     override fun onInterrupt() { abort() }
@@ -82,8 +82,26 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
         return super.onUnbind(intent)
     }
 
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        // Whisper holds a few hundred MB; give it back when Android is short of memory. It reloads on the next use.
+        if (level >= TRIM_MEMORY_RUNNING_LOW) LocalWhisper.release()
+    }
+
+    private fun localSpec(): ModelSpec? {
+        if (!prefs.useLocal) return null
+        val spec = Models.byId(prefs.localModel)
+        return if (Models.isReady(this, spec)) spec else null
+    }
+
+    private fun preloadWhisper() {
+        val spec = localSpec() ?: return
+        Thread { try { LocalWhisper.get(applicationContext, spec) } catch (_: Throwable) {} }.start()
+    }
+
     override fun onDestroy() {
-        if (::dictation.isInitialized) dictation.cancel()
+        engine?.cancel()
+        LocalWhisper.release()
         main.removeCallbacksAndMessages(null)
         if (::wm.isInitialized) hide()
         super.onDestroy()
@@ -281,22 +299,25 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
         main.removeCallbacks(expireUndo)
         state = State.LISTENING
         wave.clear()
+        val spec = localSpec()
+        engine = if (spec != null) LocalDictation(applicationContext, this, spec) else Dictation(this, this)
         setBubble(if (editing) "Say how to change the selected text" else "Listening…")
         applyState()
-        dictation.start()
+        engine?.start()
     }
 
     private fun finish() {
         if (state != State.LISTENING) return
         state = State.WORKING
         wave.clear()
-        setBubble("Working…")
+        setBubble(if (engine is LocalDictation) "Transcribing…" else "Working…")
         applyState()
-        dictation.stop()
+        engine?.stop()
     }
 
     private fun abort() {
-        if (::dictation.isInitialized) dictation.cancel()
+        engine?.cancel()
+        engine = null
         if (::wave.isInitialized) idle()
     }
 

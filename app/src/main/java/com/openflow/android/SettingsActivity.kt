@@ -2,6 +2,7 @@ package com.openflow.android
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -10,6 +11,8 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.text.InputType
 import android.view.Gravity
@@ -38,6 +41,15 @@ class SettingsActivity : Activity() {
     private lateinit var snippets: EditText
     private lateinit var appStyles: EditText
     private lateinit var tryField: EditText
+    private lateinit var useLocal: Switch
+    private lateinit var onlineSpeech: Switch
+    private lateinit var smallRow: Row
+    private lateinit var baseRow: Row
+    private lateinit var downloadRow: Row
+    private val ui = Handler(Looper.getMainLooper())
+    private val tick = object : Runnable {
+        override fun run() { refreshSpeech(); ui.postDelayed(this, 500) }
+    }
 
     private val night by lazy {
         (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
@@ -62,6 +74,12 @@ class SettingsActivity : Activity() {
     override fun onResume() {
         super.onResume()
         refreshStatus()
+        ui.post(tick)
+    }
+
+    override fun onPause() {
+        ui.removeCallbacks(tick)
+        super.onPause()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -101,11 +119,18 @@ class SettingsActivity : Activity() {
         )
     }
 
-    private fun row(title: String, subtitle: String?, trailing: View?, onClick: (() -> Unit)? = null): LinearLayout {
-        val left = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        left.addView(text(title, 17f))
-        if (subtitle != null) left.addView(text(subtitle, 13f, cSub))
-        return LinearLayout(this).apply {
+    /** A settings row plus handles to its text, so progress and status can change live. */
+    private class Row(val view: LinearLayout, val title: TextView, val subtitle: TextView, val trailing: TextView?)
+
+    private fun buildRow(title: String, subtitle: String?, trailing: TextView?, onClick: (() -> Unit)? = null): Row {
+        val titleView = text(title, 17f)
+        val subView = text(subtitle ?: "", 13f, cSub).apply { visibility = if (subtitle == null) View.GONE else View.VISIBLE }
+        val left = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(titleView)
+            addView(subView)
+        }
+        val view = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(16), dp(12), dp(16), dp(12))
@@ -119,7 +144,15 @@ class SettingsActivity : Activity() {
                 setOnClickListener { onClick() }
             }
         }
+        return Row(view, titleView, subView, trailing)
     }
+
+    private fun row(title: String, subtitle: String?, trailing: View?, onClick: (() -> Unit)? = null): LinearLayout =
+        buildRow(title, subtitle, trailing as? TextView, onClick).view.also { v ->
+            if (trailing != null && trailing !is TextView) {
+                v.addView(trailing, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(12) })
+            }
+        }
 
     private fun switchRow(title: String, subtitle: String?, checked: Boolean): Pair<LinearLayout, Switch> {
         val sw = Switch(this).apply { isChecked = checked }
@@ -204,6 +237,33 @@ class SettingsActivity : Activity() {
         behaviour.addView(spokenRow)
         col.addView(behaviour)
 
+        col.addView(section("Speech recognition"))
+        val speech = card()
+        val (localRow, localSw) = switchRow("On-device Whisper (English)", "Most accurate. Private and free. Works offline.", prefs.useLocal)
+        useLocal = localSw
+        useLocal.setOnCheckedChangeListener { _, on -> prefs.useLocal = on; refreshSpeech() }
+        speech.addView(localRow)
+        divider(speech)
+        smallRow = buildRow(Models.SMALL.title, "${Models.SMALL.blurb} · ${Models.SMALL.totalMb} MB", text("", 17f, accent, bold = true)) {
+            prefs.localModel = Models.SMALL.id; refreshSpeech()
+        }
+        speech.addView(smallRow.view)
+        divider(speech)
+        baseRow = buildRow(Models.BASE.title, "${Models.BASE.blurb} · ${Models.BASE.totalMb} MB", text("", 17f, accent, bold = true)) {
+            prefs.localModel = Models.BASE.id; refreshSpeech()
+        }
+        speech.addView(baseRow.view)
+        divider(speech)
+        downloadRow = buildRow("", "", null) { onDownloadTapped() }
+        speech.addView(downloadRow.view)
+        divider(speech)
+        val (onlineRow, onlineSw) = switchRow("Use Google online recognition", "Only when Whisper isn't downloaded. Sends audio to Google.", prefs.onlineSpeech)
+        onlineSpeech = onlineSw
+        onlineSpeech.setOnCheckedChangeListener { _, on -> prefs.onlineSpeech = on }
+        speech.addView(onlineRow)
+        col.addView(speech)
+        col.addView(footnote("Download over Wi-Fi: the model is one file set, downloaded once. After that, dictation needs no internet."))
+
         col.addView(section("AI polish (optional)"))
         val ai = card()
         val (polishRow, p) = switchRow("Polish with Claude", "Smooths grammar and flow", prefs.polish)
@@ -258,6 +318,53 @@ class SettingsActivity : Activity() {
         prefs.snippetsText = snippets.text.toString()
         prefs.appStylesText = appStyles.text.toString()
         Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun onDownloadTapped() {
+        val spec = Models.byId(prefs.localModel)
+        when {
+            ModelDownloader.running && ModelDownloader.activeId == spec.id -> ModelDownloader.cancel()
+            Models.isReady(this, spec) -> AlertDialog.Builder(this)
+                .setTitle("Delete ${spec.title}?")
+                .setMessage("This frees ${spec.totalMb} MB. You can download it again later.")
+                .setPositiveButton("Delete") { _, _ -> Models.delete(this, spec); refreshSpeech() }
+                .setNegativeButton("Keep", null)
+                .show()
+            else -> {
+                ModelDownloader.start(this, spec)
+                Toast.makeText(this, "Downloading ${spec.title}", Toast.LENGTH_SHORT).show()
+            }
+        }
+        refreshSpeech()
+    }
+
+    private fun refreshSpeech() {
+        if (!::downloadRow.isInitialized) return
+        val spec = Models.byId(prefs.localModel)
+        smallRow.trailing?.text = if (spec.id == Models.SMALL.id) "✓" else ""
+        baseRow.trailing?.text = if (spec.id == Models.BASE.id) "✓" else ""
+        val ready = Models.isReady(this, spec)
+        val busy = ModelDownloader.running && ModelDownloader.activeId == spec.id
+        when {
+            busy -> {
+                val done = ModelDownloader.doneBytes
+                val total = ModelDownloader.totalBytes.coerceAtLeast(1)
+                downloadRow.title.text = "Downloading ${spec.title}…  ${(done * 100 / total).toInt()}%"
+                downloadRow.subtitle.text = "${done / 1_000_000} of ${total / 1_000_000} MB. Tap to cancel."
+                downloadRow.subtitle.setTextColor(cSub)
+            }
+            ready -> {
+                downloadRow.title.text = "${spec.title} is ready ✓"
+                downloadRow.subtitle.text = if (prefs.useLocal) "Dictation uses it now, offline. Tap to delete." else "Turn on On-device Whisper above to use it. Tap to delete."
+                downloadRow.subtitle.setTextColor(cSub)
+            }
+            else -> {
+                downloadRow.title.text = "Download ${spec.title}"
+                val err = ModelDownloader.error
+                downloadRow.subtitle.text = err ?: "${spec.totalMb} MB, one time. Use Wi-Fi."
+                downloadRow.subtitle.setTextColor(if (err != null) attention else cSub)
+            }
+        }
     }
 
     private fun refreshStatus() {

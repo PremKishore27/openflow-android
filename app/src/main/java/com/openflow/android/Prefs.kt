@@ -24,6 +24,20 @@ class Prefs(ctx: Context) {
         get() = sp.getBoolean("sendContext", false)
         set(v) { sp.edit().putBoolean("sendContext", v).apply() }
 
+    /** Use the on-device Whisper model when it has been downloaded. */
+    var useLocal: Boolean
+        get() = sp.getBoolean("useLocal", true)
+        set(v) { sp.edit().putBoolean("useLocal", v).apply() }
+
+    var localModel: String
+        get() = sp.getString("localModel", Models.SMALL.id) ?: Models.SMALL.id
+        set(v) { sp.edit().putString("localModel", v).apply() }
+
+    /** The phone's built-in recognizer: allow Google's online engine (more accurate) instead of offline only. */
+    var onlineSpeech: Boolean
+        get() = sp.getBoolean("onlineSpeech", true)
+        set(v) { sp.edit().putBoolean("onlineSpeech", v).apply() }
+
     var spoken: Boolean
         get() = sp.getBoolean("spoken", true)
         set(v) { sp.edit().putBoolean("spoken", v).apply() }

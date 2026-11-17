@@ -55,7 +55,24 @@ Menu names vary by phone maker (Samsung, Pixel, Xiaomi and others). If you can't
 
 OpenFlow uses the accessibility service only to show its icon above your keyboard and to type your words. Nothing else is read, and password fields are skipped.
 
-## 5. Try it
+## 5. Download the Whisper model (recommended: much better accuracy)
+
+Without this step, OpenFlow uses your phone's built-in speech recognizer. It works, but it is less accurate. The
+on-device **Whisper** model is the same kind of engine behind the best dictation apps. It is free, private and
+works offline.
+
+1. In the OpenFlow app, scroll to **Speech recognition**.
+2. Pick **Whisper Small** (best accuracy, 375 MB) or **Whisper Base** (faster, 160 MB). Both are English-only.
+3. Tap **Download**. Use **Wi-Fi**. You can leave the screen while it downloads. The progress shows when you come back.
+4. When it says **✓ is ready**, you're done. Dictation now uses Whisper, with no internet needed.
+
+Notes:
+- Whisper transcribes after you tap ✓, so you won't see your words appear while you speak. The waveform shows you're being heard.
+- The first dictation after a restart can take a few seconds longer while the model loads.
+- If dictation feels slow on an older phone, switch to **Whisper Base**.
+- You can delete the model from the same screen to free the space.
+
+## 6. Try it
 
 1. Open **Notes** or any app with a text box.
 2. Tap the text box. The keyboard opens and a small round **OpenFlow icon** (the blue circle with white sound bars) appears just above it, on the right.
@@ -77,6 +94,8 @@ OpenFlow uses the accessibility service only to show its icon above your keyboar
 |---|---|
 | The icon never appears | Check that step 4 shows ✓ On. Tap into a normal text box, not a password field. |
 | "Microphone not allowed" | Do step 1 in the OpenFlow app, then try again. |
+| Words are often wrong | Do step 5: download the Whisper model. It is far more accurate than the built-in recognizer. |
+| Whisper is slow | Choose Whisper Base in the Speech recognition section. |
 | Nothing gets typed | Open the OpenFlow screen and check both rows show ✓. Some apps with custom text boxes ignore the insert. |
 | The icon is in the way | Hide the keyboard and show it again so the icon moves above it. |
 | OpenFlow is greyed out or says "Restricted setting" | Do step 3: App info → ⋮ → Allow restricted settings. Then redo step 4. |

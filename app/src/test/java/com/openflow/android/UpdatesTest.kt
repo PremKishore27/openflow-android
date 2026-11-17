@@ -22,4 +22,11 @@ class UpdatesTest {
         assertEquals(listOf(0, 10, 0), Updates.parse("v0.10.0"))
         assertEquals(listOf(1, 2), Updates.parse("1.2-beta"))
     }
+
+    @Test fun onlyOlderThan011NeedsAReinstall() {
+        assertTrue(Updates.needsReinstall("0.10"))
+        assertTrue(Updates.needsReinstall("0.9.3"))
+        assertFalse(Updates.needsReinstall("0.11"))
+        assertFalse(Updates.needsReinstall("0.12"))
+    }
 }

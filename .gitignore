@@ -9,3 +9,6 @@ xcuserdata/
 DerivedData/
 *.xcresult/
 app/libs/
+*.jks
+*.keystore
+KEEP-SAFE*

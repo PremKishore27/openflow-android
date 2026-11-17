@@ -424,13 +424,14 @@ class SettingsActivity : Activity() {
 
     private fun showUpdateDialog(current: String, info: Updates.Info) {
         val notes = info.notes.trim().take(600).ifEmpty { "No release notes." }
+        val caution = if (Updates.needsReinstall(current))
+            "\n\nOne-time step: your version is older than 0.11 and was signed with a temporary key. Android will say " +
+                "\"App not installed\" if you install over it. Uninstall OpenFlow first (your settings and the Whisper " +
+                "model are removed), then install the new file. Updates after this one install normally."
+        else ""
         AlertDialog.Builder(this)
             .setTitle("Update available: ${info.tag.removePrefix("v")}")
-            .setMessage(
-                "You have $current.\n\n$notes\n\n" +
-                    "Tap Download, then open the file to install. If Android says \"App not installed\", uninstall " +
-                    "OpenFlow first (your settings and the Whisper model are removed), then install the new file."
-            )
+            .setMessage("You have $current.\n\n$notes\n\nTap Download, then open the file to install.$caution")
             .setPositiveButton("Download") { _, _ -> openUrl(info.apkUrl ?: info.pageUrl) }
             .setNegativeButton("Later", null)
             .show()

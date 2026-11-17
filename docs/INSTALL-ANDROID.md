@@ -92,9 +92,9 @@ Notes:
 
 1. Open the OpenFlow app and scroll to **About**.
 2. Tap **Check for updates**. OpenFlow asks GitHub if a newer release exists. It sends nothing about you.
-3. If one is available, tap **Download**, then open the downloaded file and tap **Install**.
+3. If one is available, tap **Download**, then open the downloaded file and tap **Install**. It installs over the old version and keeps your settings and the Whisper model.
 
-If Android says **"App not installed"**, uninstall OpenFlow first and install the new file. Your settings and the Whisper model are removed, so you will download the model again. This happens because releases don't yet carry a permanent signing key.
+**One-time exception:** versions older than 0.11 were signed with a temporary key. If you have one of those, uninstall OpenFlow before installing 0.11 or newer (your settings and the Whisper model are removed, so you download the model again). From 0.11 on, every update installs over the previous one.
 
 ## Silence the microphone beeps
 

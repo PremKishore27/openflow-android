@@ -18,12 +18,31 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
+      - name: Prepare the release signing key
+        env:
+          KS_B64: ${{ secrets.OPENFLOW_KEYSTORE_B64 }}
+          KS_PASSWORD: ${{ secrets.OPENFLOW_KEYSTORE_PASSWORD }}
+          KS_ALIAS: ${{ secrets.OPENFLOW_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.OPENFLOW_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/openflow.jks"
+            echo "OPENFLOW_KEYSTORE_FILE=$RUNNER_TEMP/openflow.jks" >> "$GITHUB_ENV"
+            echo "OPENFLOW_KEYSTORE_PASSWORD=$KS_PASSWORD" >> "$GITHUB_ENV"
+            echo "OPENFLOW_KEY_ALIAS=$KS_ALIAS" >> "$GITHUB_ENV"
+            echo "OPENFLOW_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+            echo "Signing with the permanent OpenFlow release key."
+          else
+            echo "::warning::No signing key configured. This build uses a temporary key, so it will not install over other builds."
+          fi
       - name: Unit tests
         run: ./gradlew test
-      - name: Build debug APK
-        run: ./gradlew assembleDebug
-      - name: Name the APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk OpenFlow-Android.apk
+      - name: Build release APK
+        run: ./gradlew assembleRelease
+      - name: Name the APK and show its signing certificate
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk OpenFlow-Android.apk
+          "$(ls -d "$ANDROID_HOME"/build-tools/*/ | tail -1)apksigner" verify --print-certs OpenFlow-Android.apk | grep "SHA-256"
       - uses: actions/upload-artifact@v4
         with:
           name: OpenFlow-Android

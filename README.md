@@ -21,6 +21,10 @@ keyboard you already like and adds a single gesture for speaking. What comes out
 
 All releases: [github.com/PremKishore27/openflow-android/releases](https://github.com/PremKishore27/openflow-android/releases)
 
+**Verify the Android file:** from version 0.11, releases are signed with one permanent key. The certificate SHA-256 is
+`12:FC:F9:4B:20:B8:A9:13:83:98:B1:66:B3:7B:71:BD:D8:D2:49:7D:5E:A4:45:CC:84:2E:8E:F9:B2:37:A7:26`.
+Check a download with `apksigner verify --print-certs OpenFlow-Android.apk`.
+
 **Heads-up for Android:** Android blocks the overlay until you allow *restricted settings*. The four-step setup below, and the app itself, walk you through it.
 
 ## Set up (Android)

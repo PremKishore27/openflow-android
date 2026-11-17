@@ -32,6 +32,9 @@ object Updates {
         return false
     }
 
+    /** Builds before 0.11 were signed with throwaway keys, so updating from them needs one uninstall first. */
+    fun needsReinstall(installed: String) = isNewer("0.11.0", installed)
+
     /** Blocking. Run it on a background thread. */
     fun check(currentVersion: String): Result {
         var conn: HttpURLConnection? = null

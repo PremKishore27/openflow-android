@@ -11,15 +11,31 @@ android {
         applicationId = "com.openflow.android"
         minSdk = 26
         targetSdk = 35
-        versionCode = 10
-        versionName = "0.10"
+        versionCode = 11
+        versionName = "0.11"
         // Whisper on-device is only practical on 64-bit phones, which keeps the APK smaller too.
         ndk { abiFilters += "arm64-v8a" }
+    }
+
+    // The permanent release key is never stored in this repository. Releases are signed in GitHub Actions
+    // from encrypted secrets; on your own machine, set these variables to sign with your own key. With none
+    // set, the build falls back to the debug key, which is fine for trying things out.
+    val keystoreFile = System.getenv("OPENFLOW_KEYSTORE_FILE")
+    signingConfigs {
+        if (keystoreFile != null && file(keystoreFile).exists()) {
+            create("openflow") {
+                storeFile = file(keystoreFile)
+                storePassword = System.getenv("OPENFLOW_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("OPENFLOW_KEY_ALIAS")
+                keyPassword = System.getenv("OPENFLOW_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("openflow") ?: signingConfigs.getByName("debug")
         }
     }
     compileOptions {

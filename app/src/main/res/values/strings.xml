@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="a11y_description">Shows a floating microphone pill over any keyboard when a text field is focused, and types what you dictate into that field. It only reads the focused text field (never password fields).</string>
+</resources>

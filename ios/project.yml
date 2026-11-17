@@ -26,6 +26,8 @@ targets:
       path: OpenFlow/Info.plist
       properties:
         CFBundleDisplayName: OpenFlow
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleURLTypes:
           - CFBundleURLName: com.openflow.ios
             CFBundleURLSchemes: [openflow]
@@ -53,6 +55,8 @@ targets:
       path: OpenFlowKeyboard/Info.plist
       properties:
         CFBundleDisplayName: OpenFlow
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.keyboard-service
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KeyboardViewController

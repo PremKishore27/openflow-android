@@ -17,7 +17,7 @@ keyboard you already like and adds a single gesture for speaking. What comes out
 | Device | Get it | Guide |
 |---|---|---|
 | Android 8.0+ | [**Download OpenFlow-Android.apk**](https://github.com/PremKishore27/openflow-android/releases/latest/download/OpenFlow-Android.apk) | [Install on Android](docs/INSTALL-ANDROID.md) |
-| iPhone and iPad (iOS 17+) | Build from source with Xcode, see the guide | [Install on iPhone](docs/INSTALL-IPHONE.md) |
+| iPhone and iPad (iOS 17+) | [**Download OpenFlow-iOS-unsigned.ipa**](https://github.com/PremKishore27/openflow-android/releases/latest/download/OpenFlow-iOS-unsigned.ipa) (signed with your Apple ID by Sideloadly or AltStore) | [Install on iPhone](docs/INSTALL-IPHONE.md) |
 
 All releases: [github.com/PremKishore27/openflow-android/releases](https://github.com/PremKishore27/openflow-android/releases)
 

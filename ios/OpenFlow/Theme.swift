@@ -6,14 +6,15 @@ enum Theme {
     static let gradient = LinearGradient(colors: [indigo, blue], startPoint: .topLeading, endPoint: .bottomTrailing)
 }
 
-/// The OpenFlow logo: five white voice bars on a blue-indigo circle. Same shape as the app icon.
+/// The OpenFlow logo: five white voice bars on a flat near-black circle. Same shape as the app icon.
 struct LogoMark: View {
     var size: CGFloat = 80
     private let heights: [CGFloat] = [0.175, 0.325, 0.5, 0.325, 0.175]
 
     var body: some View {
         ZStack {
-            Circle().fill(Theme.gradient)
+            Circle().fill(Color(red: 0.043, green: 0.043, blue: 0.059))
+            Circle().strokeBorder(Color.white.opacity(0.18), lineWidth: max(1, size / 48))
             HStack(spacing: size * 0.07) {
                 ForEach(0..<5, id: \.self) { i in
                     Capsule().fill(.white).frame(width: size * 0.075, height: size * heights[i])

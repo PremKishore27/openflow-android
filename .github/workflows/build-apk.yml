@@ -54,6 +54,7 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" OpenFlow-Android.apk \
             --title "OpenFlow $GITHUB_REF_NAME" \
+            --notes-file .github/release-notes.md \
             --generate-notes \
             --latest
 

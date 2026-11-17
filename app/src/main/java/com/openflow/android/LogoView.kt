@@ -2,14 +2,16 @@ package com.openflow.android
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.LinearGradient
 import android.graphics.Paint
-import android.graphics.Shader
 import android.view.View
 
-/** The OpenFlow app logo (blue-indigo circle with five white voice bars), used as the floating icon. */
+/** The OpenFlow logo (flat near-black circle, five white voice bars), used as the floating icon. */
 class LogoView(context: Context) : View(context) {
-    private val disc = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val disc = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF0B0B0F.toInt() }
+    private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = 0x30FFFFFF
+        style = Paint.Style.STROKE
+    }
     private val bar = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = 0xFFFFFFFF.toInt()
         style = Paint.Style.STROKE
@@ -21,8 +23,9 @@ class LogoView(context: Context) : View(context) {
 
     override fun onDraw(canvas: Canvas) {
         val s = minOf(width, height).toFloat()
-        disc.shader = LinearGradient(0f, 0f, s, s, 0xFF5E5CE6.toInt(), 0xFF0A84FF.toInt(), Shader.TileMode.CLAMP)
         canvas.drawCircle(width / 2f, height / 2f, s / 2f, disc)
+        ring.strokeWidth = maxOf(1f, s / 48f)
+        canvas.drawCircle(width / 2f, height / 2f, s / 2f - ring.strokeWidth / 2f, ring)
         val k = s / 80f
         bar.strokeWidth = 6f * k
         val cx = width / 2f

@@ -162,35 +162,38 @@ class SettingsActivity : Activity() {
             setPadding(0, dp(56), 0, dp(40))
         }
         col.addView(text("OpenFlow", 34f, bold = true).apply { setPadding(dp(20), 0, dp(20), 0) })
-        col.addView(text("Hold to talk, let go, and your words appear in any app.", 15f, cSub).apply {
+        col.addView(text("Tap the icon, speak, tap ✓, and your words appear in any app.", 15f, cSub).apply {
             setPadding(dp(20), dp(4), dp(20), 0)
         })
 
-        col.addView(section("Set up"))
+        col.addView(section("Set up: 4 steps, in this order"))
         val setup = card()
         micStatus = text("", 15f, bold = true)
-        setup.addView(row("Microphone", "So OpenFlow can hear you", micStatus) {
+        setup.addView(row("1. Allow the microphone", "So OpenFlow can hear you", micStatus) {
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 1)
         })
         divider(setup)
-        overlayStatus = text("", 15f, bold = true)
-        setup.addView(row("Overlay", "Shows the pill above your keyboard", overlayStatus) {
+        setup.addView(row("2. Open Accessibility", "Find OpenFlow. Android will say it's a restricted setting. That's expected. Come back for step 3.", null) {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         })
         divider(setup)
-        setup.addView(row("Allow restricted settings", "Needed if the Overlay switch is greyed out", null) {
+        setup.addView(row("3. Allow restricted settings", "Tap ⋮ in the top corner, then Allow restricted settings", null) {
             startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
+        })
+        divider(setup)
+        overlayStatus = text("", 15f, bold = true)
+        setup.addView(row("4. Turn on the overlay", "Back in Accessibility, open OpenFlow and switch it on", overlayStatus) {
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         })
         col.addView(setup)
         col.addView(footnote(
-            "Android blocks apps installed outside the Play Store from accessibility until you allow " +
-                "restricted settings. Open that row, tap ⋮ in the top corner, choose Allow restricted settings, " +
-                "then return here."
+            "Why step 3? Android blocks apps installed outside the Play Store from using accessibility until you " +
+                "allow restricted settings. If step 2 lets you switch OpenFlow on straight away, skip step 3."
         ))
 
         col.addView(section("Try it"))
         val tryCard = card()
-        tryField = field("Tap here, then hold the pill to dictate", "", 3)
+        tryField = field("Tap here, then tap the 🎙 icon and speak", "", 3)
         tryCard.addView(tryField)
         col.addView(tryCard)
 
@@ -265,7 +268,7 @@ class SettingsActivity : Activity() {
         val service = ComponentName(this, OpenFlowService::class.java).flattenToString()
         val enabled = Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
             ?.contains(service) == true
-        overlayStatus.text = if (enabled) "✓ On" else "Turn on"
+        overlayStatus.text = if (enabled) "✓ On" else "Off"
         overlayStatus.setTextColor(if (enabled) good else attention)
     }
 }

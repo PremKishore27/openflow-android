@@ -2,8 +2,8 @@
 
 **Talk, let go, and the words appear where you were typing.**
 
-OpenFlow is a voice layer for Android in the spirit of Wispr Flow. It floats one small pill above your
-normal keyboard. Hold it, speak naturally, and it types clean text into whatever app you are in:
+OpenFlow is a voice layer for Android in the spirit of Wispr Flow. It floats one small icon above your
+normal keyboard. Tap it, speak naturally, tap ✓, and it types clean text into whatever app you are in:
 punctuation added, filler words and false starts removed, your names spelled your way, and the tone
 matched to the app you are in. Your keyboard is never replaced.
 
@@ -21,18 +21,31 @@ keyboard you already like and adds a single gesture for speaking. What comes out
 
 All releases: [github.com/PremKishore27/openflow-android/releases](https://github.com/PremKishore27/openflow-android/releases)
 
-**Heads-up for Android:** the overlay needs *restricted settings* unlocked first. The guide walks you through it.
+**Heads-up for Android:** Android blocks the overlay until you allow *restricted settings*. The four-step setup below, and the app itself, walk you through it.
+
+## Set up (Android)
+
+1. **Allow the microphone** in the app.
+2. **Open Accessibility** and find OpenFlow. Android says it's a *restricted setting*. That's expected.
+3. **Allow restricted settings:** back in the app, tap it, then ⋮ → *Allow restricted settings*.
+4. **Turn on the overlay:** open Accessibility again, open OpenFlow, switch it on.
+
+The app walks you through these four steps in order. The full guide with troubleshooting is in [docs/INSTALL-ANDROID.md](docs/INSTALL-ANDROID.md).
 
 ## Using it
 
 | To do this | Do this |
 |---|---|
-| Dictate | Hold the centre of the pill, speak, release |
-| Go hands-free | Tap the pill quickly, speak, tap ✓ (or ✕ to cancel) |
-| Rewrite selected text by voice | Select text, tap ✎, say "make this more formal" (needs your API key) |
-| Undo the last dictation | Tap ↶ within 8 seconds |
+| Dictate | Tap the 🎙 icon above your keyboard, speak, tap ✓ |
+| Cancel | Tap ✕ |
+| Undo the last dictation | Tap "↶ Tap to undo" within 6 seconds |
+| Rewrite selected text by voice | Select text, tap the icon, say "make this more formal" (needs your API key) |
 
-Dictated words also appear live in the bubble above the pill while you speak.
+One small icon floats above your keyboard. Tap it and it starts listening, growing into a bar with a live
+waveform. Your words show above it as you speak. Tap ✓ and they're typed where your cursor is.
+
+Your own keyboard is never replaced. OpenFlow is an accessibility service that draws the icon as an
+overlay and writes text into the focused field. It ignores password fields.
 
 ## What it does
 

@@ -8,7 +8,7 @@ About 5 minutes. You need an Android phone running Android 8.0 or newer.
 
 ## 1. Download the app
 
-1. Open the link above in **Chrome** on your phone. While this repository is private, sign in to GitHub in Chrome first with the account that owns it.
+1. Open the link above in **Chrome** on your phone.
 2. Tap **Download anyway** if Chrome warns about the file. It's the app you're installing, built from this public source code.
 3. When it finishes, tap **Open** in the download bar, or find `OpenFlow-Android.apk` in your **Downloads** folder.
 
@@ -27,37 +27,47 @@ Android asks you to allow this the first time.
 2. If **Play Protect** says the app is unsafe or unrecognised, tap **Install anyway**. Play Protect does this for any app not from the Play Store.
 3. Tap **Open** when it finishes.
 
-## 4. Allow the microphone
+## 4. Set up OpenFlow: 4 steps, in this order
 
-On the OpenFlow screen, tap **Microphone** and choose **While using the app** (or **Allow**).
+Open OpenFlow. The **Set up** card lists the four steps below. Each one opens the right screen for you. The green ✓ on the app tells you when a step is done.
 
-## 5. Turn on the overlay
+### Step 1: Allow the microphone
+Tap **1. Allow the microphone** and choose **While using the app** (or **Allow**).
 
-This is the step that trips most people up. Android blocks apps installed outside the Play Store from using accessibility features until you unlock them. OpenFlow uses the accessibility service to draw the pill above your keyboard and type for you. Nothing else is read.
+### Step 2: Open Accessibility
+Tap **2. Open Accessibility**. Under **Installed apps** (or **Downloaded apps**), tap **OpenFlow**.
 
-1. On the OpenFlow screen, tap **Overlay**. This opens **Settings → Accessibility**.
-2. Look for **OpenFlow** under **Installed apps** (or **Downloaded apps**).
-   - If it's there and the switch is **greyed out**, go to step 3.
-   - If you see **"Restricted setting"** when you tap it, go to step 3.
-   - If the switch works, skip to step 4.
-3. **Unlock restricted settings:**
-   1. Go back to the OpenFlow screen and tap **Allow restricted settings**. This opens **App info** for OpenFlow.
-   2. Tap the **⋮** (three dots) in the top-right corner.
-   3. Tap **Allow restricted settings** and confirm with your PIN, pattern or fingerprint.
-   4. Go back to **Settings → Accessibility → Installed apps → OpenFlow**.
+Android will say it's a **restricted setting**, or the switch will be greyed out. **This is expected.** Android blocks apps installed outside the Play Store from using accessibility until you allow it. Don't give up here: go back to OpenFlow and do step 3.
 
-   Menu names vary by phone maker (Samsung, Pixel, Xiaomi and others). If you can't find them, search Settings for **restricted** and pick the result for OpenFlow.
-4. Tap **OpenFlow**, switch **Use OpenFlow** on, and tap **Allow**.
-5. Press back. The OpenFlow screen should now show **✓ On** next to Overlay.
+### Step 3: Allow restricted settings
+1. Back in OpenFlow, tap **3. Allow restricted settings**. This opens **App info** for OpenFlow.
+2. Tap the **⋮** (three dots) in the top-right corner.
+3. Tap **Allow restricted settings** and confirm with your PIN, pattern or fingerprint.
 
-## 6. Try it
+Menu names vary by phone maker (Samsung, Pixel, Xiaomi and others). If you can't find it, search Settings for **restricted** and pick the result for OpenFlow.
+
+> If the ⋮ menu has no "Allow restricted settings" entry, go back to step 2 and tap OpenFlow once more. Android only shows the option after it has blocked the switch once.
+
+### Step 4: Turn on the overlay
+1. Tap **4. Turn on the overlay**, then open **OpenFlow** under **Installed apps**.
+2. Switch **Use OpenFlow** on, and tap **Allow**.
+3. Press back. Step 4 on the OpenFlow screen now shows **✓ On**.
+
+OpenFlow uses the accessibility service only to show its icon above your keyboard and to type your words. Nothing else is read, and password fields are skipped.
+
+## 5. Try it
 
 1. Open **Notes** or any app with a text box.
-2. Tap the text box. The keyboard opens and a dark pill appears just above it.
-3. **Hold** the centre of the pill, say "Hello comma this is a test full stop", then let go.
-4. Your words appear in the text box, cleaned up.
+2. Tap the text box. The keyboard opens and a small **🎙 icon** appears just above it, on the right.
+3. **Tap the 🎙 icon.** It starts listening straight away and grows into a small bar with a live waveform.
+4. Speak. Your words show above the bar as you talk. Say "comma", "full stop" or "new line" to add punctuation.
+5. Tap the green **✓**. Your cleaned-up words are typed where your cursor is, and the bar shrinks back to the icon.
 
-Tap **↶** within 8 seconds to undo a dictation. Tap the pill quickly to go hands-free, then **✓** to finish or **✕** to cancel.
+| To do this | Do this |
+|---|---|
+| Cancel without typing anything | Tap **✕** |
+| Undo what was just typed | Tap **↶ Tap to undo** above the icon (shown for 6 seconds) |
+| Rewrite selected text | Select text, tap the icon, say "make this more formal" (needs an API key) |
 
 ---
 
@@ -65,11 +75,11 @@ Tap **↶** within 8 seconds to undo a dictation. Tap the pill quickly to go han
 
 | What you see | What to do |
 |---|---|
-| The pill never appears | Check that the Overlay switch is on in Accessibility. Tap into a normal text box, not a password field. |
-| "Microphone not allowed" | Allow the microphone on the OpenFlow screen, then try again. |
+| The icon never appears | Check that step 4 shows ✓ On. Tap into a normal text box, not a password field. |
+| "Microphone not allowed" | Do step 1 in the OpenFlow app, then try again. |
 | Nothing gets typed | Open the OpenFlow screen and check both rows show ✓. Some apps with custom text boxes ignore the insert. |
-| The pill covers the keyboard | Hide the keyboard and show it again so the pill moves up. |
-| Overlay switch greyed out | Follow step 5.3 to allow restricted settings. |
+| The icon is in the way | Hide the keyboard and show it again so the icon moves above it. |
+| OpenFlow is greyed out or says "Restricted setting" | Do step 3: App info → ⋮ → Allow restricted settings. Then redo step 4. |
 | Updating to a new version | Download the new APK and tap Install. Your settings are kept. |
 
 ## Uninstall

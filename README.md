@@ -1,49 +1,81 @@
-# OpenFlow for Android: a voice keyboard (Wispr Flow–style)
+# OpenFlow
 
-Hold the mic key in any app, talk, let go: cleaned-up text is typed for you.
-This is the Android sibling of the Mac app in `openflow/`.
+**Talk, let go, and the words appear where you were typing.**
 
-## Build and install
+OpenFlow is a voice layer for Android in the spirit of Wispr Flow. It floats one small pill above your
+normal keyboard. Hold it, speak naturally, and it types clean text into whatever app you are in:
+punctuation added, filler words and false starts removed, your names spelled your way, and the tone
+matched to the app you are in. Your keyboard is never replaced.
 
-1. Build with `./gradlew assembleDebug` (JDK 17, Android SDK 35) or press **Run** in Android Studio.
-2. Install `app/build/outputs/apk/debug/app-debug.apk` on your phone.
-3. Open **OpenFlow**: allow the microphone, then turn on the overlay under Accessibility → Installed apps → OpenFlow.
-   (If Android blocks it as a "restricted setting": Settings → Apps → OpenFlow → ⋮ → Allow restricted settings.)
-4. Tap any text field. A small dark pill appears above your normal keyboard. Hold it and talk.
+## Why it exists
 
-Unit tests (cleanup + context logic): `./gradlew test`.
+Typing on a phone is slow, and dictation tools usually dump raw, messy transcripts. OpenFlow keeps the
+keyboard you already like and adds a single gesture for speaking. What comes out reads like you wrote it.
 
-## Using the overlay
+## Get it running
 
-| Action | How |
+1. Build the APK (see below) or download `OpenFlow-debug.apk` from the repository's Actions build, then install it.
+2. Open OpenFlow and tap **Allow the microphone**.
+3. Tap **Turn on the OpenFlow overlay** and switch it on under *Installed apps*.
+   If Android says "restricted setting", go to Settings → Apps → OpenFlow → ⋮ → *Allow restricted settings*, then try again.
+4. Tap any text field. The pill appears above your keyboard.
+
+## Using it
+
+| To do this | Do this |
 |---|---|
-| Dictate | Hold the pill, talk, release |
-| Hands-free | Tap the pill quickly, talk, tap ✓ (✕ cancels) |
-| Edit selected text by voice | Select text, tap the ✎ chip, say "make this more formal" (needs API key) |
-| Undo last dictation | Tap the ↶ chip (shown for a few seconds after inserting) |
+| Dictate | Hold the centre of the pill, speak, release |
+| Go hands-free | Tap the pill quickly, speak, tap ✓ (or ✕ to cancel) |
+| Rewrite selected text by voice | Select text, tap ✎, say "make this more formal" (needs your API key) |
+| Undo the last dictation | Tap ↶ within 8 seconds |
 
-Your own keyboard is never replaced. OpenFlow is an accessibility service that draws the pill as an
-overlay and writes text into the focused field. It ignores password fields.
+Dictated words also appear live in the bubble above the pill while you speak.
 
 ## What it does
 
-Same pipeline as the Mac app: spoken punctuation, "scratch that", self-corrections ("3, no wait, 4"),
-filler and stutter removal, your dictionary and snippets, tone per app (by package name), and
-**context awareness**: it reads the text before the cursor so a dictation continuing a sentence
-starts in lower case with the right spacing. Password fields are never read.
-Optional AI polish and edit-by-voice use the Anthropic API with your own key.
+- **Spoken punctuation:** "comma", "full stop", "new line", "new paragraph".
+- **Self-corrections:** "Meet at 3, no wait, 4" becomes "Meet at 4". "Scratch that" removes the last sentence.
+- **Cleanup:** removes "um", "uh" and stutters; fixes capitals and spacing.
+- **Context:** reads the text before the cursor, so a continuation starts in lower case with the right spacing.
+- **Your dictionary and snippets:** always spell "open flow" as "OpenFlow"; say "my email" to insert your address.
+- **Tone per app:** casual in chat apps, formal in mail apps. You choose the mapping.
+- **Optional AI polish:** send the dictation to Claude for grammar and flow, using your own Anthropic key.
+
+## Privacy
+
+- Password fields are never read or written.
+- Speech recognition uses Android's built-in recognizer. On recent phones it runs on-device when available.
+- The only network call is the optional Claude request, and only if you add a key and turn it on.
+- Your API key and settings are stored in the app's private storage on your phone.
 
 ## How it works
 
-- `OpenFlowService.kt` the accessibility service: floating pill, mic gestures, inserting text, undo
-- `Dictation.kt` Android `SpeechRecognizer` wrapper (restarts itself so pauses don't end your dictation)
-- `Cleanup.kt`, `ContextFit.kt` ports of the Mac app's text logic (same tests)
-- `Llm.kt` optional Claude calls, `Prefs.kt` settings, `SettingsActivity.kt` setup + settings screen
+| File | What it does |
+|---|---|
+| `OpenFlowService.kt` | Accessibility service: draws the overlay, handles gestures, writes text into the focused field |
+| `Dictation.kt` | Wraps Android's speech recognizer and keeps listening through pauses |
+| `Cleanup.kt`, `ContextFit.kt` | Rule-based text cleanup and capitalisation/spacing from context |
+| `Llm.kt` | Optional Claude polish and edit-by-voice; falls back to the rule-based text on any failure |
+| `Prefs.kt`, `SettingsActivity.kt` | Settings and the setup screen |
+| `WaveformView.kt` | Live level bars while you speak |
 
-## Honest limits
+The app uses no third-party libraries. Everything runs on the Android SDK.
 
-- Speech-to-text uses Android's built-in recognizer (on-device where your phone supports it, otherwise
-  Google's service), not Whisper. Quality and privacy depend on the phone's recognizer.
-  Swapping in on-device Whisper (whisper.cpp) is the natural next step.
-- Some recognizers play a start sound each time they restart.
-- Text is inserted with accessibility actions; a few apps with custom text views (some games, canvas editors) ignore them.
+## Build from source
+
+Needs JDK 17 and the Android SDK (platform 35).
+
+```bash
+./gradlew test          # unit tests
+./gradlew assembleDebug # app/build/outputs/apk/debug/app-debug.apk
+```
+
+## Limits
+
+- Dictation quality depends on the phone's speech recognizer. Swapping in on-device Whisper is the next big step.
+- Some apps with custom text views (canvas editors, some games) ignore text inserted by accessibility tools.
+- Debug builds only for now. There is no Play Store release.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

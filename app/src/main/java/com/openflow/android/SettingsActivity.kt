@@ -193,7 +193,7 @@ class SettingsActivity : Activity() {
 
         col.addView(section("Try it"))
         val tryCard = card()
-        tryField = field("Tap here, then tap the 🎙 icon and speak", "", 3)
+        tryField = field("Tap here, then tap the OpenFlow icon and speak", "", 3)
         tryCard.addView(tryField)
         col.addView(tryCard)
 

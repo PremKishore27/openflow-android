@@ -25,7 +25,7 @@ import android.widget.TextView
 /**
  * OpenFlow as ONE floating icon, in the style of Wispr Flow.
  *
- * Tap the icon: it starts listening and grows into a small pill  [ ✕ | waveform | ✓ ].
+ * The icon is the OpenFlow logo itself. Tap it: it starts listening and grows into a small bar  [ ✕ | waveform | ✓ ].
  * Tap ✓ and your words are typed into the focused text field, then the pill shrinks back to the icon.
  * Everything lives in a single small window above the keyboard.
  */
@@ -42,7 +42,8 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
     private lateinit var cancel: TextView
     private lateinit var done: TextView
     private lateinit var center: FrameLayout
-    private lateinit var glyph: TextView
+    private lateinit var logo: LogoView
+    private lateinit var pill: LinearLayout
     private lateinit var wave: WaveformView
     private lateinit var params: WindowManager.LayoutParams
     private var shown = false
@@ -59,6 +60,8 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
     private val refreshRunnable = Runnable { refresh() }
     private val clearBubble = Runnable { setBubble("") }
     private val expireUndo = Runnable { undoText = null; setBubble("") }
+
+    private val ICON = 48
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
@@ -130,25 +133,19 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
 
         cancel = chip("✕", 0xFF3A3A3C.toInt()) { abort() }
         done = chip("✓", 0xFF30D158.toInt()) { finish() }
-        glyph = TextView(this).apply {
-            text = "🎙"
-            textSize = 20f
-            gravity = Gravity.CENTER
-        }
+        logo = LogoView(this)
         wave = WaveformView(this).apply { visibility = View.GONE }
         center = FrameLayout(this).apply {
             contentDescription = "OpenFlow: tap to dictate"
-            addView(glyph, FrameLayout.LayoutParams(-1, -1))
+            addView(logo, FrameLayout.LayoutParams(-1, -1))
             addView(wave, FrameLayout.LayoutParams(-1, dp(26), Gravity.CENTER))
-            layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
+            layoutParams = LinearLayout.LayoutParams(dp(ICON), dp(ICON))
             setOnClickListener { onTapIcon() }
         }
 
-        val pill = LinearLayout(this).apply {
+        pill = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            background = capsule(0xF2151517.toInt(), 28)
-            setPadding(dp(4), dp(4), dp(4), dp(4))
         }
         pill.addView(cancel)
         pill.addView(center)
@@ -212,15 +209,18 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
         relayout()
     }
 
-    /** The icon is a 40dp circle; while listening it grows into  [ ✕ | waveform | ✓ ]. */
+    /** Idle: just the OpenFlow logo. Listening: it grows into  [ ✕ | waveform | ✓ ]. */
     private fun applyState() {
         val listening = state == State.LISTENING
         cancel.visibility = if (listening) View.VISIBLE else View.GONE
         done.visibility = if (listening) View.VISIBLE else View.GONE
-        glyph.visibility = if (listening) View.GONE else View.VISIBLE
-        glyph.text = if (state == State.WORKING) "…" else "🎙"
+        logo.visibility = if (listening) View.GONE else View.VISIBLE
+        logo.alpha = if (state == State.WORKING) 0.55f else 1f
         wave.visibility = if (listening) View.VISIBLE else View.GONE
-        (center.layoutParams as LinearLayout.LayoutParams).width = if (listening) dp(112) else dp(40)
+        pill.background = if (listening) capsule(0xF2151517.toInt(), 28) else null
+        val pad = if (listening) dp(4) else 0
+        pill.setPadding(pad, pad, pad, pad)
+        (center.layoutParams as LinearLayout.LayoutParams).width = if (listening) dp(112) else dp(ICON)
         center.requestLayout()
         relayout()
     }

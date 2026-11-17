@@ -58,8 +58,8 @@ OpenFlow uses the accessibility service only to show its icon above your keyboar
 ## 5. Try it
 
 1. Open **Notes** or any app with a text box.
-2. Tap the text box. The keyboard opens and a small **🎙 icon** appears just above it, on the right.
-3. **Tap the 🎙 icon.** It starts listening straight away and grows into a small bar with a live waveform.
+2. Tap the text box. The keyboard opens and a small round **OpenFlow icon** (the blue circle with white sound bars) appears just above it, on the right.
+3. **Tap the OpenFlow icon.** One tap and it starts listening. The icon itself grows into a small bar with **✕**, a live waveform and **✓**.
 4. Speak. Your words show above the bar as you talk. Say "comma", "full stop" or "new line" to add punctuation.
 5. Tap the green **✓**. Your cleaned-up words are typed where your cursor is, and the bar shrinks back to the icon.
 

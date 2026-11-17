@@ -36,13 +36,13 @@ The app walks you through these four steps in order. The full guide with trouble
 
 | To do this | Do this |
 |---|---|
-| Dictate | Tap the 🎙 icon above your keyboard, speak, tap ✓ |
+| Dictate | Tap the OpenFlow icon above your keyboard, speak, tap ✓ |
 | Cancel | Tap ✕ |
 | Undo the last dictation | Tap "↶ Tap to undo" within 6 seconds |
 | Rewrite selected text by voice | Select text, tap the icon, say "make this more formal" (needs your API key) |
 
-One small icon floats above your keyboard. Tap it and it starts listening, growing into a bar with a live
-waveform. Your words show above it as you speak. Tap ✓ and they're typed where your cursor is.
+One small OpenFlow logo floats above your keyboard. Tap it once and it starts listening, growing into a bar
+with ✕, a live waveform and ✓. Your words show above it as you speak. Tap ✓ and they're typed where your cursor is.
 
 Your own keyboard is never replaced. OpenFlow is an accessibility service that draws the icon as an
 overlay and writes text into the focused field. It ignores password fields.

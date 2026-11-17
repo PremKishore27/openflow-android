@@ -1,4 +1,4 @@
-name: Build APK
+name: Build apps
 on:
   push:
     branches: [main]
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  android:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,3 +37,32 @@ jobs:
             --title "OpenFlow $GITHUB_REF_NAME" \
             --generate-notes \
             --latest
+
+  ios:
+    # Builds an UNSIGNED .ipa on GitHub's Mac servers. Sideloadly or AltStore signs it with your own Apple ID.
+    runs-on: macos-latest
+    needs: android
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build unsigned app
+        run: |
+          xcodebuild -project ios/OpenFlow.xcodeproj -scheme OpenFlow \
+            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build
+      - name: Package .ipa
+        run: |
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/OpenFlow.app Payload/
+          zip -qry OpenFlow-iOS-unsigned.ipa Payload
+          ls -l OpenFlow-iOS-unsigned.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenFlow-iOS-unsigned
+          path: OpenFlow-iOS-unsigned.ipa
+      - name: Attach to the release for version tags
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$GITHUB_REF_NAME" OpenFlow-iOS-unsigned.ipa --clobber

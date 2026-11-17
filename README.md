@@ -17,7 +17,7 @@ keyboard you already like and adds a single gesture for speaking. What comes out
 | Device | Get it | Guide |
 |---|---|---|
 | Android 8.0+ | [**Download OpenFlow-Android.apk**](https://github.com/PremKishore27/openflow-android/releases/latest/download/OpenFlow-Android.apk) | [Install on Android](docs/INSTALL-ANDROID.md) |
-| iPhone and iPad | Coming soon | [Install on iPhone](docs/INSTALL-IPHONE.md) |
+| iPhone and iPad (iOS 17+) | Build from source with Xcode, see the guide | [Install on iPhone](docs/INSTALL-IPHONE.md) |
 
 All releases: [github.com/PremKishore27/openflow-android/releases](https://github.com/PremKishore27/openflow-android/releases)
 
@@ -65,6 +65,10 @@ Dictated words also appear live in the bubble above the pill while you speak.
 The app uses no third-party libraries. Everything runs on the Android SDK.
 
 ## Build from source
+
+**iPhone and iPad:** open `ios/OpenFlow.xcodeproj` in Xcode 26. Full steps are in [the iPhone guide](docs/INSTALL-IPHONE.md).
+
+**Android:**
 
 Pushes to `main` build the APK in GitHub Actions. Version tags (`v*`) also publish it as a release.
 

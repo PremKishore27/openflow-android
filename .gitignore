@@ -4,3 +4,7 @@ local.properties
 .idea/
 *.iml
 *.apk
+ios/build/
+xcuserdata/
+DerivedData/
+*.xcresult/

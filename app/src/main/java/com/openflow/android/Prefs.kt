@@ -38,6 +38,11 @@ class Prefs(ctx: Context) {
         get() = sp.getBoolean("onlineSpeech", true)
         set(v) { sp.edit().putBoolean("onlineSpeech", v).apply() }
 
+    /** Silence the beeps the phone's speech recognizer plays when listening starts and stops. */
+    var muteSounds: Boolean
+        get() = sp.getBoolean("muteSounds", true)
+        set(v) { sp.edit().putBoolean("muteSounds", v).apply() }
+
     var spoken: Boolean
         get() = sp.getBoolean("spoken", true)
         set(v) { sp.edit().putBoolean("spoken", v).apply() }

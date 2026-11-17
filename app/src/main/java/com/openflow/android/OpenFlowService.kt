@@ -133,6 +133,7 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
         background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(bg) }
         layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
         visibility = View.GONE
+        isSoundEffectsEnabled = false
         setOnClickListener { onTap() }
     }
 
@@ -150,6 +151,7 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
             setPadding(dp(14), dp(8), dp(14), dp(8))
             background = capsule(0xF21C1C1E.toInt(), 14)
             visibility = View.GONE
+            isSoundEffectsEnabled = false
             setOnClickListener { if (undoText != null) undo() }
         }
         root.addView(bubble, LinearLayout.LayoutParams(-2, -2).apply { bottomMargin = dp(8) })
@@ -160,6 +162,7 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
         wave = WaveformView(this).apply { visibility = View.GONE }
         center = FrameLayout(this).apply {
             contentDescription = "OpenFlow: tap to dictate"
+            isSoundEffectsEnabled = false
             addView(logo, FrameLayout.LayoutParams(-1, -1))
             addView(wave, FrameLayout.LayoutParams(-1, dp(26), Gravity.CENTER))
             layoutParams = LinearLayout.LayoutParams(dp(ICON), dp(ICON))

@@ -98,6 +98,14 @@ The first time you open OpenFlow, a short guide walks you through everything. It
 
 iOS doesn't let keyboards use the microphone, so recording happens in the OpenFlow app. That is why the app opens, and why Wispr Flow's keyboard does the same in other apps. Your text is inserted after you come back, within two minutes.
 
+## Updating OpenFlow
+
+1. In the OpenFlow app, open **Settings** and scroll to **About**.
+2. Tap **Check for updates**. OpenFlow asks GitHub if a newer release exists. It sends nothing about you.
+3. If one is available, tap **Open download page**, download `OpenFlow-iOS-unsigned.ipa`, and install it with Sideloadly or AltStore, the same way as the first time. It installs over the old version and keeps your settings.
+
+With a free Apple ID, reinstalling also refreshes the 7-day limit.
+
 ---
 
 ## Troubleshooting

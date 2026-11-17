@@ -88,6 +88,18 @@ Notes:
 | Undo what was just typed | Tap **↶ Tap to undo** above the icon (shown for 6 seconds) |
 | Rewrite selected text | Select text, tap the icon, say "make this more formal" (needs an API key) |
 
+## Updating OpenFlow
+
+1. Open the OpenFlow app and scroll to **About**.
+2. Tap **Check for updates**. OpenFlow asks GitHub if a newer release exists. It sends nothing about you.
+3. If one is available, tap **Download**, then open the downloaded file and tap **Install**.
+
+If Android says **"App not installed"**, uninstall OpenFlow first and install the new file. Your settings and the Whisper model are removed, so you will download the model again. This happens because releases don't yet carry a permanent signing key.
+
+## Silence the microphone beeps
+
+Your phone's own speech recognizer beeps when it starts and stops listening. In the OpenFlow app, under **Behaviour**, keep **Silence microphone beeps** on. OpenFlow mutes those sounds only while you dictate and restores your volume right after. (With Whisper, there are no beeps to begin with.)
+
 ---
 
 ## Troubleshooting
@@ -97,6 +109,7 @@ Notes:
 | The icon never appears | Check that step 4 shows ✓ On. Tap into a normal text box, not a password field. |
 | "Microphone not allowed" | Do step 1 in the OpenFlow app, then try again. |
 | Words are often wrong | Do step 5: download the Whisper model. It is far more accurate than the built-in recognizer. |
+| Beeps when I start and stop | Turn on **Silence microphone beeps** under Behaviour. |
 | Whisper is slow | Choose Whisper Base in the Speech recognition section. |
 | Nothing gets typed | Open the OpenFlow screen and check both rows show ✓. Some apps with custom text boxes ignore the insert. |
 | The icon is in the way | Hide the keyboard and show it again so the icon moves above it. |

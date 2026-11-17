@@ -57,6 +57,8 @@ overlay and writes text into the focused field. It ignores password fields.
 - **Your dictionary and snippets:** always spell "open flow" as "OpenFlow"; say "my email" to insert your address.
 - **Tone per app:** casual in chat apps, formal in mail apps. You choose the mapping.
 - **On-device Whisper (English):** a free, offline speech model that runs on your phone for much better accuracy than the built-in recognizer.
+- **Update checks:** in Settings → About, the app asks GitHub if a newer release exists (Android and iPhone).
+- **Silent dictation (Android):** an option to mute the phone recognizer's start and stop beeps.
 - **Optional AI polish:** send the dictation to Claude for grammar and flow, using your own Anthropic key. This needs a key; without one, the polish switches do nothing.
 
 ## Privacy
@@ -97,7 +99,7 @@ Needs JDK 17, the Android SDK (platform 35), and `bash` with `curl`. The first b
 
 ## Limits
 
-- Whisper needs a 64-bit phone and a one-time download (160–375 MB). It transcribes after you tap ✓, so there is no live text. English only for now.
+- Whisper needs a 64-bit phone and a one-time download (160–375 MB). It transcribes after you tap ✓, so there is no live text. English only for now. Whisper is Android-only so far: the iPhone and iPad app uses Apple's built-in recognizer.
 - Some apps with custom text views (canvas editors, some games) ignore text inserted by accessibility tools.
 - Debug builds only for now. There is no Play Store release.
 

@@ -2,6 +2,7 @@ package com.openflow.android
 
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -31,12 +32,43 @@ class Dictation(private val ctx: Context, private val cb: Callback) : SpeechEngi
     private var finishing = false   // the user let go; waiting for the last result
     private val deliverRunnable = Runnable { deliver() }
 
+    // The recognizer plays a beep every time it starts or stops. We can't turn that off, so we mute the
+    // streams it uses for the length of the dictation and put them back afterwards.
+    private val audio = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    private val mutedStreams = mutableListOf<Int>()
+    private val unmuteRunnable = Runnable { unmuteSounds() }
+
+    private fun muteSounds() {
+        main.removeCallbacks(unmuteRunnable)
+        if (!Prefs(ctx).muteSounds || mutedStreams.isNotEmpty()) return
+        for (stream in intArrayOf(AudioManager.STREAM_MUSIC, AudioManager.STREAM_NOTIFICATION, AudioManager.STREAM_SYSTEM)) {
+            try {
+                if (!audio.isStreamMute(stream)) {   // never touch something the user had already muted
+                    audio.adjustStreamVolume(stream, AudioManager.ADJUST_MUTE, 0)
+                    mutedStreams.add(stream)
+                }
+            } catch (_: Exception) {}                 // some phones refuse (for example in Do Not Disturb)
+        }
+    }
+
+    private fun unmuteSounds() {
+        for (stream in mutedStreams) try { audio.adjustStreamVolume(stream, AudioManager.ADJUST_UNMUTE, 0) } catch (_: Exception) {}
+        mutedStreams.clear()
+    }
+
+    /** A short delay so the final "done" beep is still covered. */
+    private fun scheduleUnmute() {
+        main.removeCallbacks(unmuteRunnable)
+        main.postDelayed(unmuteRunnable, 400)
+    }
+
     override fun start() {
         if (!SpeechRecognizer.isRecognitionAvailable(ctx)) {
             cb.onError("No speech recognition service on this phone")
             return
         }
         destroy()
+        muteSounds()
         segments.clear()
         active = true
         finishing = false
@@ -65,6 +97,7 @@ class Dictation(private val ctx: Context, private val cb: Callback) : SpeechEngi
         finishing = false
         main.removeCallbacks(deliverRunnable)
         destroy()
+        scheduleUnmute()
     }
 
     private fun listen() {
@@ -82,6 +115,7 @@ class Dictation(private val ctx: Context, private val cb: Callback) : SpeechEngi
         main.removeCallbacks(deliverRunnable)
         val text = segments.joinToString(" ").trim()
         destroy()
+        scheduleUnmute()
         cb.onFinal(text)
     }
 
@@ -125,10 +159,12 @@ class Dictation(private val ctx: Context, private val cb: Callback) : SpeechEngi
                         main.postDelayed({ if (active) listen() }, 150)
                     SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> {
                         active = false
+                        scheduleUnmute()
                         cb.onError("Microphone permission missing. Open the OpenFlow app.")
                     }
                     else -> {
                         active = false
+                        scheduleUnmute()
                         cb.onError("Speech recognition error ($error)")
                     }
                 }

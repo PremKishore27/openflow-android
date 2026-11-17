@@ -35,6 +35,8 @@ class SettingsActivity : Activity() {
     private lateinit var polish: Switch
     private lateinit var sendContext: Switch
     private lateinit var spoken: Switch
+    private lateinit var muteSounds: Switch
+    private lateinit var updateRow: Row
     private lateinit var apiKey: EditText
     private lateinit var model: EditText
     private lateinit var dictionary: EditText
@@ -236,6 +238,11 @@ class SettingsActivity : Activity() {
         spoken = sw
         behaviour.addView(spokenRow)
         divider(behaviour)
+        val (muteRow, muteSw) = switchRow("Silence microphone beeps", "Mutes the phone's start and stop beeps while you dictate, then restores your volume.", prefs.muteSounds)
+        muteSounds = muteSw
+        muteSounds.setOnCheckedChangeListener { _, on -> prefs.muteSounds = on }
+        behaviour.addView(muteRow)
+        divider(behaviour)
         behaviour.addView(row("Reset icon position", "Drag the icon anywhere. This puts it back by the keyboard.", null) {
             prefs.resetOverlayPos()
             Toast.makeText(this, "Icon position reset", Toast.LENGTH_SHORT).show()
@@ -305,6 +312,15 @@ class SettingsActivity : Activity() {
         tone.addView(appStyles)
         col.addView(tone)
 
+        col.addView(section("About"))
+        val about = card()
+        val version = installedVersion()
+        updateRow = buildRow("Check for updates", "Version $version", null) { checkForUpdates(version) }
+        about.addView(updateRow.view)
+        divider(about)
+        about.addView(row("Source code and releases", "github.com/${Updates.REPO}", null) { openUrl(Updates.RELEASES_PAGE) })
+        col.addView(about)
+
         col.addView(primaryButton("Save") { save() })
         return ScrollView(this).apply {
             setBackgroundColor(cBg)
@@ -370,6 +386,54 @@ class SettingsActivity : Activity() {
                 downloadRow.subtitle.setTextColor(if (err != null) attention else cSub)
             }
         }
+    }
+
+    private fun installedVersion(): String =
+        try { packageManager.getPackageInfo(packageName, 0).versionName ?: "?" } catch (_: Exception) { "?" }
+
+    private fun openUrl(url: String) {
+        try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) } catch (_: Exception) {
+            Toast.makeText(this, "No browser found", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun checkForUpdates(current: String) {
+        updateRow.subtitle.text = "Checking GitHub…"
+        updateRow.subtitle.setTextColor(cSub)
+        Thread {
+            val result = Updates.check(current)
+            runOnUiThread {
+                when (result) {
+                    is Updates.Result.UpToDate -> {
+                        updateRow.subtitle.text = "Version $current · you're up to date ✓"
+                        updateRow.subtitle.setTextColor(good)
+                    }
+                    is Updates.Result.Failed -> {
+                        updateRow.subtitle.text = "Couldn't check: ${result.reason}"
+                        updateRow.subtitle.setTextColor(attention)
+                    }
+                    is Updates.Result.Newer -> {
+                        updateRow.subtitle.text = "Version ${result.info.tag.removePrefix("v")} is available"
+                        updateRow.subtitle.setTextColor(accent)
+                        showUpdateDialog(current, result.info)
+                    }
+                }
+            }
+        }.start()
+    }
+
+    private fun showUpdateDialog(current: String, info: Updates.Info) {
+        val notes = info.notes.trim().take(600).ifEmpty { "No release notes." }
+        AlertDialog.Builder(this)
+            .setTitle("Update available: ${info.tag.removePrefix("v")}")
+            .setMessage(
+                "You have $current.\n\n$notes\n\n" +
+                    "Tap Download, then open the file to install. If Android says \"App not installed\", uninstall " +
+                    "OpenFlow first (your settings and the Whisper model are removed), then install the new file."
+            )
+            .setPositiveButton("Download") { _, _ -> openUrl(info.apkUrl ?: info.pageUrl) }
+            .setNegativeButton("Later", null)
+            .show()
     }
 
     private fun refreshStatus() {

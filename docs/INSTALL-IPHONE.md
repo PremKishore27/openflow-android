@@ -77,29 +77,26 @@ OpenFlow opens on the phone.
 
 ---
 
-## Add the keyboard
+## Follow the in-app setup guide
 
-1. Open **Settings → General → Keyboard → Keyboards → Add New Keyboard**.
-2. Tap **OpenFlow** under *Third-Party Keyboards*.
-3. Tap **OpenFlow** again and switch on **Allow Full Access**.
+The first time you open OpenFlow, a short guide walks you through everything. It works like Wispr Flow's setup. You can replay it any time from **Settings → Show the setup guide again** inside the app.
 
-Full Access lets the keyboard pass your dictated text back from the OpenFlow app. Apple shows a warning about it, and it's needed. OpenFlow doesn't send your text anywhere.
+1. **Where do you spend your time typing?** Pick what applies: messages, emails, AI chats, notes, something else.
+2. **Three quick pages** show what OpenFlow does: dictating notes, working in any app, and turning messy speech into clean text.
+3. **Add the OpenFlow keyboard.** Tap **Open Settings**. In **OpenFlow → Keyboards**, switch on **OpenFlow**, then switch on **Allow Full Access**. Come back to the app. A green ✓ shows when the keyboard has been added.
+   - Full Access lets the keyboard receive your dictated text from the app. OpenFlow doesn't send anything over the internet.
+4. **Allow the microphone.** Tap **Allow microphone**, then allow speech recognition too. Speech is recognised on the iPhone when iOS allows it.
+5. **Try it.** Tap the text box, then tap and hold the **globe** key and choose **OpenFlow**. Tap **🎙 Tap to dictate**. OpenFlow opens and starts listening.
 
-## Allow the microphone
+## Dictate in any app
 
-1. Open the **OpenFlow** app and go to the **Settings** tab.
-2. Tap **Allow microphone**, then **Allow**.
-3. Also allow **Speech Recognition** when asked. Speech is recognised on the iPhone when iOS supports it.
-
-## Dictate
-
-1. Open any app with a text box, like Notes or Messages.
-2. Tap the text box, then tap the **globe** key until the **OpenFlow** keyboard is showing.
-3. Tap **🎙 Dictate**. The OpenFlow app opens and starts listening.
+1. Open any app with a text box, like Notes or Messages, and tap the box.
+2. Tap and hold the **globe** key and choose **OpenFlow**.
+3. Tap **🎙 Tap to dictate**. The OpenFlow app opens and starts listening straight away.
 4. Speak. Tap the red button when you're done.
-5. Swipe back to your app, or tap the **‹ back** link at the top left of the status bar. The keyboard inserts your text.
+5. Swipe back to your app, or tap **‹ back** at the top left of the status bar. The keyboard inserts your text.
 
-Tap **⌫** and **return** as usual. Your dictation is inserted after you come back, within two minutes.
+iOS doesn't let keyboards use the microphone, so recording happens in the OpenFlow app. That is why the app opens, and why Wispr Flow's keyboard does the same in other apps. Your text is inserted after you come back, within two minutes.
 
 ---
 
@@ -107,8 +104,8 @@ Tap **⌫** and **return** as usual. Your dictation is inserted after you come b
 
 | What you see | What to do |
 |---|---|
-| The keyboard says "Turn on Allow Full Access" | Settings → General → Keyboard → Keyboards → OpenFlow → Allow Full Access. |
-| Dictate does nothing | Open the OpenFlow app once, from the Home Screen. Then try again. |
+| The keyboard says "Turn on Allow Full Access" | Settings → OpenFlow → Keyboards → Allow Full Access. |
+| Tap to dictate does nothing | Open the OpenFlow app once from the Home Screen, finish the setup guide, then try again. |
 | Nothing is inserted | Make sure you tapped stop in OpenFlow, then go back to the app. Text is kept for two minutes. |
 | The app stops opening after a week | You're on a free Apple ID. Press Run in Xcode again. |
 | Some banking apps show no keyboard | Apple blocks third-party keyboards in some secure fields. Use the OpenFlow app and copy the text. |

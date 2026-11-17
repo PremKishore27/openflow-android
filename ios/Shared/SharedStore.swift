@@ -30,6 +30,20 @@ enum SharedStore {
 
     static var dictionary: [String: String] { parseMap(dictionaryText) }
 
+    /// What the person said they type most (from onboarding). Stored only on this device.
+    static var useCases: [String] {
+        get { suite.stringArray(forKey: "useCases") ?? [] }
+        set { suite.set(newValue, forKey: "useCases") }
+    }
+
+    /// The keyboard records that it has been shown, and whether Full Access is on, so the app can show setup ✓ marks.
+    static func markKeyboardSeen(fullAccess: Bool) {
+        suite.set(Date().timeIntervalSince1970, forKey: "kbSeenAt")
+        suite.set(fullAccess, forKey: "kbFullAccess")
+    }
+    static var keyboardSeen: Bool { suite.double(forKey: "kbSeenAt") > 0 }
+    static var keyboardFullAccess: Bool { suite.bool(forKey: "kbFullAccess") }
+
     /// The keyboard reads this once, shortly after you come back from OpenFlow.
     static func saveResult(_ text: String) {
         suite.set(text, forKey: resultKey)

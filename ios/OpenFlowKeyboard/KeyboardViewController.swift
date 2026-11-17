@@ -13,19 +13,25 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        SharedStore.markKeyboardSeen(fullAccess: hasFullAccess)
         insertPendingDictation()
     }
 
     private func build() {
         view.backgroundColor = .secondarySystemBackground
 
-        status.text = hasFullAccess ? "Tap the mic to dictate" : "Turn on Allow Full Access for OpenFlow in Settings"
+        status.text = hasFullAccess ? "Tap the mic, speak, then swipe back" : "Turn on Allow Full Access for OpenFlow in Settings"
         status.font = .preferredFont(forTextStyle: .footnote)
         status.textColor = .secondaryLabel
         status.textAlignment = .center
         status.numberOfLines = 2
 
-        micButton = makeKey(title: "🎙 Dictate", background: .systemBlue, foreground: .white, action: #selector(dictateTapped))
+        // One big mic key, like Wispr Flow's keyboard.
+        micButton = makeKey(title: "🎙  Tap to dictate", background: .systemBlue, foreground: .white, action: #selector(dictateTapped))
+        micButton.titleLabel?.font = .systemFont(ofSize: 20, weight: .semibold)
+        micButton.layer.cornerRadius = 16
+        micButton.heightAnchor.constraint(equalToConstant: 64).isActive = true
+
         let globe = makeKey(title: "🌐", background: .tertiarySystemFill, foreground: .label, action: nil)
         globe.addTarget(self, action: #selector(nextKeyboardTapped), for: .touchUpInside)
         globe.isHidden = !needsInputModeSwitchKey
@@ -33,17 +39,17 @@ final class KeyboardViewController: UIInputViewController {
         let delete = makeKey(title: "⌫", background: .tertiarySystemFill, foreground: .label, action: #selector(deleteTapped))
         let enter = makeKey(title: "return", background: .tertiarySystemFill, foreground: .label, action: #selector(returnTapped))
 
-        let keys = UIStackView(arrangedSubviews: [globe, micButton, space, delete, enter])
+        let keys = UIStackView(arrangedSubviews: [globe, space, delete, enter])
         keys.axis = .horizontal
         keys.spacing = 6
         keys.distribution = .fill
-        micButton.widthAnchor.constraint(equalTo: space.widthAnchor, multiplier: 1.2).isActive = true
-        globe.widthAnchor.constraint(equalToConstant: 44).isActive = true
+        globe.widthAnchor.constraint(equalToConstant: 48).isActive = true
         delete.widthAnchor.constraint(equalToConstant: 56).isActive = true
+        enter.widthAnchor.constraint(equalToConstant: 76).isActive = true
 
-        let stack = UIStackView(arrangedSubviews: [status, keys])
+        let stack = UIStackView(arrangedSubviews: [status, micButton, keys])
         stack.axis = .vertical
-        stack.spacing = 8
+        stack.spacing = 10
         stack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(stack)
         NSLayoutConstraint.activate([

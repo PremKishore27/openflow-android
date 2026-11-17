@@ -3,19 +3,33 @@ import SwiftUI
 @main
 struct OpenFlowApp: App {
     @StateObject private var session = DictationSession()
+    @AppStorage("onboarded") private var onboarded = false
+    @State private var showRecorder = false
 
     var body: some Scene {
         WindowGroup {
-            TabView {
-                RecordView(session: session)
-                    .tabItem { Label("Dictate", systemImage: "mic.fill") }
-                SettingsView()
-                    .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+            Group {
+                if onboarded {
+                    TabView {
+                        RecordView(session: session)
+                            .tabItem { Label("Dictate", systemImage: "mic.fill") }
+                        SettingsView()
+                            .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+                    }
+                    .tint(.blue)
+                } else {
+                    OnboardingView(session: session) { onboarded = true }
+                }
             }
-            .tint(.blue)
+            // The keyboard's mic key opens openflow://record: show the recorder over whatever is on screen.
+            .fullScreenCover(isPresented: $showRecorder) {
+                RecordView(session: session, onClose: { showRecorder = false })
+            }
             .onOpenURL { url in
-                // openflow://record is sent by the keyboard's mic key: start listening straight away.
-                if url.host == "record" { session.requestStart() }
+                if url.host == "record" {
+                    session.requestStart()
+                    showRecorder = true
+                }
             }
         }
     }

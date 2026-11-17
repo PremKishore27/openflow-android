@@ -3,6 +3,7 @@ import UIKit
 
 struct RecordView: View {
     @ObservedObject var session: DictationSession
+    var onClose: (() -> Void)? = nil
     @State private var copied = false
 
     var body: some View {
@@ -66,6 +67,11 @@ struct RecordView: View {
                 }
             }
             .navigationTitle("OpenFlow")
+            .toolbar {
+                if let onClose {
+                    ToolbarItem(placement: .topBarTrailing) { Button("Done", action: onClose).bold() }
+                }
+            }
         }
     }
 

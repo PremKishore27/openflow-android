@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var dictionary = SharedStore.dictionaryText
     @State private var micOn = AVAudioApplication.shared.recordPermission == .granted
     @Environment(\.openURL) private var openURL
+    @AppStorage("onboarded") private var onboarded = true
 
     var body: some View {
         NavigationStack {
@@ -26,6 +27,10 @@ struct SettingsView: View {
                     Text("Setup")
                 } footer: {
                     Text("Add the keyboard: Settings → General → Keyboard → Keyboards → Add New Keyboard → OpenFlow, then turn on Allow Full Access.")
+                }
+
+                Section {
+                    Button("Show the setup guide again") { onboarded = false }
                 }
 
                 Section {

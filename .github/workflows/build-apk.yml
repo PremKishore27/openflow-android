@@ -1,7 +1,13 @@
 name: Build APK
 on:
   push:
+    branches: [main]
+    tags: ["v*"]
   workflow_dispatch:
+
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,13 +18,22 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: 8.9
       - name: Unit tests
-        run: gradle test
+        run: ./gradlew test
       - name: Build debug APK
-        run: gradle assembleDebug
+        run: ./gradlew assembleDebug
+      - name: Name the APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk OpenFlow-Android.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: openflow-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: OpenFlow-Android
+          path: OpenFlow-Android.apk
+      - name: Publish release for version tags
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" OpenFlow-Android.apk \
+            --title "OpenFlow $GITHUB_REF_NAME" \
+            --generate-notes \
+            --latest

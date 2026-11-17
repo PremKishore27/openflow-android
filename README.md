@@ -12,13 +12,16 @@ matched to the app you are in. Your keyboard is never replaced.
 Typing on a phone is slow, and dictation tools usually dump raw, messy transcripts. OpenFlow keeps the
 keyboard you already like and adds a single gesture for speaking. What comes out reads like you wrote it.
 
-## Get it running
+## Download and install
 
-1. Build the APK (see below) or download `OpenFlow-debug.apk` from the repository's Actions build, then install it.
-2. Open OpenFlow and tap **Allow the microphone**.
-3. Tap **Turn on the OpenFlow overlay** and switch it on under *Installed apps*.
-   If Android says "restricted setting", go to Settings → Apps → OpenFlow → ⋮ → *Allow restricted settings*, then try again.
-4. Tap any text field. The pill appears above your keyboard.
+| Device | Get it | Guide |
+|---|---|---|
+| Android 8.0+ | [**Download OpenFlow-Android.apk**](https://github.com/PremKishore27/openflow-android/releases/latest/download/OpenFlow-Android.apk) | [Install on Android](docs/INSTALL-ANDROID.md) |
+| iPhone and iPad | Coming soon | [Install on iPhone](docs/INSTALL-IPHONE.md) |
+
+All releases: [github.com/PremKishore27/openflow-android/releases](https://github.com/PremKishore27/openflow-android/releases)
+
+**Heads-up for Android:** the overlay needs *restricted settings* unlocked first. The guide walks you through it.
 
 ## Using it
 
@@ -62,6 +65,8 @@ Dictated words also appear live in the bubble above the pill while you speak.
 The app uses no third-party libraries. Everything runs on the Android SDK.
 
 ## Build from source
+
+Pushes to `main` build the APK in GitHub Actions. Version tags (`v*`) also publish it as a release.
 
 Needs JDK 17 and the Android SDK (platform 35).
 

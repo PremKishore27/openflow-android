@@ -426,8 +426,12 @@ class OpenFlowService : AccessibilityService(), Dictation.Callback {
     }
 
     // ---------- text handling ----------
-    private fun fieldText(n: AccessibilityNodeInfo): String =
-        if (n.isShowingHintText) "" else n.text?.toString() ?: ""
+    /** The real text in the box. A grey hint ("Message") counts as empty. */
+    private fun fieldText(n: AccessibilityNodeInfo): String {
+        val raw = n.text?.toString() ?: return ""
+        return if (Placeholder.isHint(raw, n.hintText?.toString(), n.isShowingHintText,
+                n.textSelectionStart, n.textSelectionEnd, prefs.placeholders())) "" else raw
+    }
 
     private fun selection(n: AccessibilityNodeInfo): Pair<Int, Int> {
         val len = fieldText(n).length

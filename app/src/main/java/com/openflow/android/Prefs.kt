@@ -43,6 +43,13 @@ class Prefs(ctx: Context) {
         get() = sp.getBoolean("muteSounds", true)
         set(v) { sp.edit().putBoolean("muteSounds", v).apply() }
 
+    /** Grey hint texts that apps show in empty boxes ("Message"), one per line. OpenFlow treats them as empty. */
+    var placeholdersText: String
+        get() = sp.getString("placeholders", Placeholder.DEFAULTS) ?: Placeholder.DEFAULTS
+        set(v) { sp.edit().putString("placeholders", v).apply() }
+
+    fun placeholders() = Placeholder.parse(placeholdersText)
+
     var spoken: Boolean
         get() = sp.getBoolean("spoken", true)
         set(v) { sp.edit().putBoolean("spoken", v).apply() }

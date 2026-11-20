@@ -114,6 +114,7 @@ Real phone screenshots of the Android overlay are on the way. If you have one to
 | Android: no *Allow restricted settings* in the ⋮ menu | It only appears after Android blocked the switch once. Try step 2 first, go back, then open the ⋮ menu again. |
 | Android: the icon never shows up | Check that step 4 shows ✓ On. Tap into a normal text box, not a password field. |
 | Words are often wrong | Download **Whisper Small** in *Speech recognition*. It's far more accurate than the built-in recognizer. |
+| A word like "Message" appears before my text (WhatsApp, etc.) | Update to 0.13 or newer. If another app shows a different grey hint, add it under **Placeholder text to ignore** in the app. |
 | Whisper feels slow | Switch to **Whisper Base**. |
 | Beeps when I start and stop | Turn on **Silence microphone beeps** under *Behaviour*. |
 | iPhone: the keyboard says *Allow Full Access* | Settings → OpenFlow → Keyboards → **Allow Full Access**. |

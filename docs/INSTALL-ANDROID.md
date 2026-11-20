@@ -110,6 +110,7 @@ Your phone's own speech recognizer beeps when it starts and stops listening. In 
 | "Microphone not allowed" | Do step 1 in the OpenFlow app, then try again. |
 | Words are often wrong | Do step 5: download the Whisper model. It is far more accurate than the built-in recognizer. |
 | Beeps when I start and stop | Turn on **Silence microphone beeps** under Behaviour. |
+| A word like "Message" appears before my text (WhatsApp, etc.) | Update to 0.13 or newer. If another app shows a different grey hint, add it under **Placeholder text to ignore** in the OpenFlow app. |
 | Whisper is slow | Choose Whisper Base in the Speech recognition section. |
 | Nothing gets typed | Open the OpenFlow screen and check both rows show ✓. Some apps with custom text boxes ignore the insert. |
 | The icon is in the way | Hide the keyboard and show it again so the icon moves above it. |

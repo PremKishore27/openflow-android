@@ -42,6 +42,7 @@ class SettingsActivity : Activity() {
     private lateinit var dictionary: EditText
     private lateinit var snippets: EditText
     private lateinit var appStyles: EditText
+    private lateinit var placeholders: EditText
     private lateinit var tryField: EditText
     private lateinit var useLocal: Switch
     private lateinit var onlineSpeech: Switch
@@ -306,6 +307,13 @@ class SettingsActivity : Activity() {
         snip.addView(snippets)
         col.addView(snip)
 
+        col.addView(section("Placeholder text to ignore"))
+        val ph = card()
+        placeholders = field("Message", prefs.placeholdersText, 4)
+        ph.addView(placeholders)
+        col.addView(ph)
+        col.addView(footnote("Apps like WhatsApp show grey hint text such as “Message” in an empty box. OpenFlow treats these as empty so it doesn't type after them. Add the hint your app shows, one per line."))
+
         col.addView(section("Tone per app: package = casual | formal | default"))
         val tone = card()
         appStyles = field("com.whatsapp = casual", prefs.appStylesText, 4)
@@ -338,6 +346,7 @@ class SettingsActivity : Activity() {
         prefs.dictionaryText = dictionary.text.toString()
         prefs.snippetsText = snippets.text.toString()
         prefs.appStylesText = appStyles.text.toString()
+        prefs.placeholdersText = placeholders.text.toString()
         Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show()
     }
 

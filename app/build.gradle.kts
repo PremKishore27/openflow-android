@@ -11,8 +11,8 @@ android {
         applicationId = "com.openflow.android"
         minSdk = 26
         targetSdk = 35
-        versionCode = 12
-        versionName = "0.12"
+        versionCode = 13
+        versionName = "0.13"
         // Whisper on-device is only practical on 64-bit phones, which keeps the APK smaller too.
         ndk { abiFilters += "arm64-v8a" }
     }

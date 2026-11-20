@@ -2,6 +2,14 @@
 
 Newest first. The latest build is always on the [Releases](https://github.com/PremKishore27/openflow-android/releases) page.
 
+## 0.13.0
+
+### Fixed
+- **"Message" typed before your text in WhatsApp** (and similar hints in other apps). Empty boxes show grey hint text, and Android sometimes passes it to OpenFlow as if it were real text, so OpenFlow typed after it. OpenFlow now recognises these hints and treats the box as empty.
+
+### Added
+- **Placeholder text to ignore** in the app's settings: a short list (Message, Type a message, Reply, Search and a few more) that you can edit to add the hint your own app shows.
+
 ## 0.12.0
 
 ### Added
